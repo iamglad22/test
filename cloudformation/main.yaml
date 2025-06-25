@@ -458,7 +458,7 @@ Resources:
         - http://${albDnsName}
         - albDnsName: !GetAtt ALB.DNSName
       PayloadFormatVersion: '1.0'
-  
+
   ApiGatewayRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
@@ -513,7 +513,6 @@ Resources:
         SigningBehavior: always
         SigningProtocol: sigv4
         Description: Access control for CloudFront to S3
-
 
   CloudFrontDistribution:
     Type: AWS::CloudFront::Distribution
