@@ -317,6 +317,8 @@ jobs:
 
   deploy_ecr:
     runs-on: ubuntu-latest
+    #env:
+    #  PARAMS_FILE: ${{ env.PARAMS_FILE }}
     outputs:
       ecr_repository_name: ${{ steps.ecr_output.outputs.ecr_repository_name }}
     steps:
@@ -336,7 +338,8 @@ jobs:
             --template-file aws-cloudformation/templates/aws-ecr.yaml \
             --stack-name ${{ env.ENV_NAME }}-ecs-ecr \
             --parameter-overrides \
-              ENV_NAME=${{ env.ENV_NAME }}
+              ENV_NAME=${{ env.ENV_NAME }} \
+              file://${{ env.PARAMS_FILE }}
 
       
       - name: Get ECR Outputs
