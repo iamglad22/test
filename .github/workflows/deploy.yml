@@ -140,10 +140,13 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}      
       - name: Deploy CloudFormation Stack - Security Group
         run: |
+          PARAMS=$(jq -r '.[] | "\(.ParameterKey)=\(.ParameterValue)"' ${{ env.PARAMS_FILE }})
           aws cloudformation deploy \
             --template-file aws-cloudformation/templates/aws-sg.yaml \
             --stack-name ${{ env.ENV_NAME }}-security-group \
-            --parameter-overrides VPCId=${{ needs.deploy_network.outputs.vpc_name }}
+            --parameter-overrides \
+              VPCId=${{ needs.deploy_network.outputs.vpc_name }} \
+              $PARAMS
       
       - name: Get Security Group Outputs
         id: security_group_output
@@ -177,6 +180,7 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
       - name: Deploy CloudFormation Stack - Application Load Balancer
         run: |
+          PARAMS=$(jq -r '.[] | "\(.ParameterKey)=\(.ParameterValue)"' ${{ env.PARAMS_FILE }})
           aws cloudformation deploy \
             --template-file aws-cloudformation/templates/aws-ecs-loadbalancer.yaml \
             --stack-name ${{ env.ENV_NAME }}-alb \
@@ -184,7 +188,8 @@ jobs:
               VPCId=${{ needs.deploy_network.outputs.vpc_name }} \
               PublicSubnetId1=${{ needs.deploy_network.outputs.public_subnet1 }} \
               PublicSubnetId2=${{ needs.deploy_network.outputs.public_subnet2 }} \
-              SgAlbId=${{ needs.deploy_sg.outputs.sg_alb_id }} 
+              SgAlbId=${{ needs.deploy_sg.outputs.sg_alb_id }} \
+              $PARAMS
       
       - name: Get Application Load Balancer Outputs
         id: alb_output
@@ -221,11 +226,14 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
       - name: Deploy CloudFormation Stack - API Gateway
         run: |
+          PARAMS=$(jq -r '.[] | "\(.ParameterKey)=\(.ParameterValue)"' ${{ env.PARAMS_FILE }})
           aws cloudformation deploy \
             --template-file aws-cloudformation/templates/aws-apigateway.yaml \
             --stack-name ${{ env.ENV_NAME }}-api-gateway \
             --parameter-overrides \
-              AlbDnsName=${{ needs.deploy_alb.outputs.alb_dns_name }}
+              AlbDnsName=${{ needs.deploy_alb.outputs.alb_dns_name }} \
+              $PARAMS
+
 
       
       - name: Get API Gateway Outputs
@@ -310,12 +318,14 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
       - name: Deploy CloudFormation Stack - Cloudfront
         run: |
+          PARAMS=$(jq -r '.[] | "\(.ParameterKey)=\(.ParameterValue)"' ${{ env.PARAMS_FILE }})
           aws cloudformation deploy \
             --template-file aws-cloudformation/templates/aws-cloudfront.yaml \
             --stack-name ${{ env.ENV_NAME }}-cloudfront \
             --parameter-overrides \
               S3RegionalDomainName=${{ needs.deploy_s3.outputs.s3_regional_domain_name }} \
-              ApiGatewayDomainName=${{ needs.deploy_api-gateway.outputs.api_gateway_domain_name }}
+              ApiGatewayDomainName=${{ needs.deploy_api-gateway.outputs.api_gateway_domain_name }} \
+              $PARAMS
 
       
       - name: Get Cloudfront Outputs
@@ -348,6 +358,7 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
       - name: Deploy CloudFormation Stack - S3 Bucket Policy
         run: |
+          PARAMS=$(jq -r '.[] | "\(.ParameterKey)=\(.ParameterValue)"' ${{ env.PARAMS_FILE }})
           aws cloudformation deploy \
             --template-file aws-cloudformation/templates/aws-s3-policy.yaml \
             --stack-name ${{ env.ENV_NAME }}-s3-policy \
@@ -355,6 +366,7 @@ jobs:
               S3BucketId=${{ needs.deploy_s3.outputs.s3_id }}
               S3Arn=${{ needs.deploy_s3.outputs.s3_arn }}
               CloudFrontId=${{ needs.deploy_cloudfront.outputs.cloudfront_id }}
+              $PARAMS
 
   deploy_ecr:
     runs-on: ubuntu-latest
@@ -464,12 +476,14 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
       - name: Deploy CloudFormation Stack - ECS Log Group
         run: |
+          PARAMS=$(jq -r '.[] | "\(.ParameterKey)=\(.ParameterValue)"' ${{ env.PARAMS_FILE }})
           aws cloudformation deploy \
             --template-file aws-cloudformation/templates/aws-ecs-loggroup.yaml \
             --stack-name ${{ env.ENV_NAME }}-ecs-loggroup \
             --parameter-overrides \
               ENV_NAME=${{ env.ENV_NAME }} \
-              ServiceName=${{ needs.deploy_api-gateway.outputs.api_gateway_domain_name }}
+              ServiceName=${{ needs.deploy_api-gateway.outputs.api_gateway_domain_name }} \
+              $PARAMS
 
       
       - name: Get ECS Log Group Outputs
@@ -485,9 +499,12 @@ jobs:
 
       - name: Deploy CloudFormation Stack - ECS Role
         run: |
+          PARAMS=$(jq -r '.[] | "\(.ParameterKey)=\(.ParameterValue)"' ${{ env.PARAMS_FILE }})
           aws cloudformation deploy \
             --template-file aws-cloudformation/templates/aws-ecs-role.yaml \
             --stack-name ${{ env.ENV_NAME }}-ecs-role
+            --parameter-overrides $PARAMS
+
 
       
       - name: Get ECS IAM Role Outputs
@@ -502,11 +519,13 @@ jobs:
 
       - name: Deploy CloudFormation Stack - ECS Cluster
         run: |
+          PARAMS=$(jq -r '.[] | "\(.ParameterKey)=\(.ParameterValue)"' ${{ env.PARAMS_FILE }})
           aws cloudformation deploy \
             --template-file aws-cloudformation/templates/aws-ecs-cluster.yaml \
             --stack-name ${{ env.ENV_NAME }}-ecs-cluster \
             --parameter-overrides \
               ENV_NAME=${{ env.ENV_NAME }}
+              $PARAMS
 
       
       - name: Get ECS Cluster Outputs
@@ -555,12 +574,14 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}            
       - name: Deploy CloudFormation Stack - ECS Task Definition
         run: |
+          PARAMS=$(jq -r '.[] | "\(.ParameterKey)=\(.ParameterValue)"' ${{ env.PARAMS_FILE }})
           aws cloudformation deploy \
             --template-file aws-cloudformation/templates/aws-ecs-taskdefinition.yaml \
             --stack-name ${{ env.ENV_NAME }}-ecs-taskdefinition \
             --parameter-overrides \
               LogGroupId=${{ needs.deploy_ecs-req.outputs.loggroup_id }} \
-              EcsRoleArn=${{ needs.deploy_ecs-req.outputs.ecs_role_arn }}
+              EcsRoleArn=${{ needs.deploy_ecs-req.outputs.ecs_role_arn }} \
+              $PARAMS
 
       
       - name: Get ECS Task Definition Outputs
@@ -576,6 +597,7 @@ jobs:
 
       - name: Deploy CloudFormation Stack - ECS Service
         run: |
+          PARAMS=$(jq -r '.[] | "\(.ParameterKey)=\(.ParameterValue)"' ${{ env.PARAMS_FILE }})
           aws cloudformation deploy \
             --template-file aws-cloudformation/templates/aws-ecs-service.yaml \
             --stack-name ${{ env.ENV_NAME }}-ecs-service \
@@ -586,6 +608,7 @@ jobs:
               PrivateSubnetId1=${{ needs.deploy_network.outputs.private_subnet1 }} \
               PrivateSubnetId2=${{ needs.deploy_network.outputs.private_subnet2 }} \
               SgEcsId=${{ needs.deploy_sg.outputs.sg_ecs_id }}
+              $PARAMS
 
          
 
