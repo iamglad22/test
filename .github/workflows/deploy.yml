@@ -139,13 +139,15 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}      
       - name: Deploy CloudFormation Stack - Security Group
+        env:
+          VPC_ID: ${{ needs.deploy_network.outputs.vpc_name }}
         run: |
           PARAMS=$(jq -r '.[] | "\(.ParameterKey)=\(.ParameterValue)"' ${{ env.PARAMS_FILE }})
           aws cloudformation deploy \
             --template-file aws-cloudformation/templates/aws-sg.yaml \
             --stack-name ${{ env.ENV_NAME }}-security-group \
             --parameter-overrides \
-              VPCId=${{ needs.deploy_network.outputs.vpc_name }} \
+              VPCId=$VPC_ID \
               $PARAMS
       
       - name: Get Security Group Outputs
