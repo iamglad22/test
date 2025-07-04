@@ -317,8 +317,8 @@ jobs:
 
   deploy_ecr:
     runs-on: ubuntu-latest
-    #env:
-    #  PARAMS_FILE: ${{ env.PARAMS_FILE }}
+    env:
+      PARAMS_FILE: PARAMS=$(jq -r '.[] | "\(.ParameterKey)=\(.ParameterValue)"' aws-cloudformation/parameters/dev.json)
     outputs:
       ecr_repository_name: ${{ steps.ecr_output.outputs.ecr_repository_name }}
     steps:
@@ -339,7 +339,7 @@ jobs:
             --stack-name ${{ env.ENV_NAME }}-ecs-ecr \
             --parameter-overrides \
               ENV_NAME=${{ env.ENV_NAME }} \
-              file://${{ env.PARAMS_FILE }}
+              $PARAMS_FILE
 
       
       - name: Get ECR Outputs
