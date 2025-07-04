@@ -142,7 +142,7 @@ jobs:
         env:
           VPC_ID: ${{ needs.deploy_network.outputs.vpc_name }}
         run: |
-          PARAMS=$(jq -r '.[] | "\(.ParameterKey)=\(.ParameterValue)"' ${{ env.PARAMS_FILE }})
+          PARAMS=$(jq -r '.[] | "\(.ParameterKey)=\(.ParameterValue)"' ${{ env.PARAMS_FILE }} | xargs)
           aws cloudformation deploy \
             --template-file aws-cloudformation/templates/aws-sg.yaml \
             --stack-name ${{ env.ENV_NAME }}-security-group \
