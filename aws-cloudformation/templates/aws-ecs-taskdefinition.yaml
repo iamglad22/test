@@ -1,0 +1,64 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: IFM CloudFormation for Moeve
+Parameters:
+  InfraCode:
+    Type: String
+
+#  ServiceName:
+#    Type: String
+#    Description: ECS Service Name
+
+  ContainerPort:
+    Type: Number
+    Description: The port the container will listen on
+
+  ContainerImage:
+    Type: String
+    Description: The Docker image URI for the ECS Task (e.g.,<account-id>.dkr.ecr.<region>.amazonaws.com/my-app:latest)
+
+  ECSContainerName:
+    Type: String
+    Description: Name of the ECS container
+
+  ECSTaskDefinitionName:
+    Type: String
+    Description: Name of the ECS Task Definition Family
+
+  ECSLogStreamPrefix:
+    Type: String
+    Description: AWS log stream prefix for TAsk definition	
+Resources:
+  # =====================
+  # ECS Task Definitions
+  # =====================
+  ECSTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ContainerDefinitions:
+        - Name: !Ref ECSContainerName
+          Image: !Ref ContainerImage
+          PortMappings:
+            - ContainerPort: !Ref ContainerPort
+              Protocol: tcp
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              #awslogs-group: !Ref LogGroup
+              awslogs-group: !Ref LogGroupId
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: !Ref ECSLogStreamPrefix
+      RequiresCompatibilities:
+        - FARGATE
+      #ExecutionRoleArn: !GetAtt ECSExecutionRole.Arn
+      #TaskRoleArn: !GetAtt ECSExecutionRole.Arn
+      ExecutionRoleArn: !Ref EcsRoleArn
+      TaskRoleArn: !Ref EcsRoleArn
+      Family: !Ref ECSTaskDefinitionName
+      Cpu: '256'
+      Memory: '512'
+      NetworkMode: awsvpc
+
+Outputs:
+TaskDefinitionId:
+  Value: !Ref ECSTaskDefinition
+  Description: Task Definition ID

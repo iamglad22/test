@@ -1,0 +1,56 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: IFM CloudFormation - Security Group
+Parameters:
+  InfraCode:
+    Type: String
+  ContainerPort:
+    Type: Number
+    Description: The port the container will listen on
+
+#  SecurityGroupECSName:
+#    Type: String
+
+#  SecurityGroupALBName:
+#    Type: String
+Resources:
+  # =====================
+  # Security Groups
+  # =====================
+  SecurityGroupECS:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPCId
+      GroupDescription: Allow ALB to reach ECS tasks
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref ContainerPort
+          ToPort: !Ref ContainerPort
+          SourceSecurityGroupId: !Ref SecurityGroupALB
+      Tags:
+        - Key: Name
+          Value: !Sub "${InfraCode}-ecs-sg"
+        #  Value: !Ref SecurityGroupECSName
+      
+  SecurityGroupALB:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPCId
+      GroupDescription: Allow HTTP inbound to ALB
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref ContainerPort
+          ToPort: !Ref ContainerPort
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub "${InfraCode}-alb-sg"
+        #  Value: !Ref SecurityGroupALBName
+
+Outputs:
+  SgEcsId:
+    Value: !Ref SecurityGroupECS
+    Description: SG for ECS
+
+  SgAlbId:
+    Value: !Ref SecurityGroupALB
+    Description: SG for ALB

@@ -1,0 +1,66 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: IFM CloudFormation - Load Balancer
+Parameters:
+  InfraCode:
+    Type: String
+#  ALBName:
+#    Type: String
+#  ALBTGName:
+#    Type: String
+  ContainerPort:
+    Type: Number
+    Description: The port the container will listen on
+Resources:
+  # ========================================
+  # Load Balancer & Target Group
+  # ======================================== 
+  ALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      #Name: !Ref ALBName
+      Name: !Sub "${InfraCode}-alb"
+      Scheme: internet-facing
+      Subnets:
+      #  - !Ref PublicSubnet1
+      #  - !Ref PublicSubnet2
+        - !Ref PublicSubnetId1
+        - !Ref PublicSubnetId2
+      
+      SecurityGroups:
+        - !Ref SgAlbId
+
+  ALBTG:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      #Name: !Ref ALBTGName
+      Name: !Sub "${InfraCode}-tg"
+      #VpcId: !Ref MyVpc
+      VpcId: !Ref VPCId
+      Protocol: HTTP
+      Port: !Ref ContainerPort
+      TargetType: ip
+      HealthCheckPath: /health
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 2
+      Matcher:
+        HttpCode: '200'
+
+  ALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref ALB
+      Protocol: HTTP
+      Port: !Ref ContainerPort
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref ALBTG
+
+Outputs:
+  AlbDnsName:
+    Value: !GetAtt ALB.DNSName
+    Description: Application Load Balancer DNS Name
+  AlbTgId:
+    Value: !Ref ALBTG
+    Description: Application Load Balancer Target Group

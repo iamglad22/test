@@ -1,0 +1,71 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: IFM CloudFormation - API Gateway
+Parameters:
+  InfraCode:
+    Type: String
+#  APIGatewayName:
+#    Type: String
+#    Description: API Gateway Name
+    
+  StageName:
+    Type: String
+    Description: API Gateway Deployment Stage Name    
+Resources:
+  # ========================================
+  # API Gateway HTTP
+  # ========================================
+
+  MyApiGateway:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      #Name: !Ref APIGatewayName
+      name: !Sub "${InfraCode}-api"
+      ProtocolType: HTTP
+      CorsConfiguration:
+        AllowOrigins:
+          - '*'
+        AllowMethods:
+          - GET
+          - POST
+          - OPTIONS
+          - PUT
+          - DELETE
+          - PATCH
+          - HEAD
+
+  ApiGatewayIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref MyApiGateway
+      IntegrationType: HTTP_PROXY
+      IntegrationMethod: ANY
+      #IntegrationUri: !Sub
+      #  - http://${albDnsName}
+      #  - albDnsName: !GetAtt ALB.DNSName
+      IntegrationUri: !Sub "http://${AlbDnsName}"
+      PayloadFormatVersion: '1.0'
+
+  ApiGatewayRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref MyApiGateway
+      RouteKey: ANY /{proxy+}
+      Target: !Sub integrations/${ApiGatewayIntegration}
+
+  ApiGatewayStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref MyApiGateway
+      AutoDeploy: true
+      StageName: !Ref StageName
+
+Outputs:
+  ApiGatewayId:
+    Value: !Ref MyApiGateway
+    Description: API Gateway ID
+  ApiGatewayInvokeUrl:
+    Description: Invoke URL for API Gateway HTTP API
+    Value: !Sub https://${MyApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${StageName}/
+  ApiGatewayDomainName:
+    Value: !Sub ${MyApiGateway}.execute-api.${AWS::Region}.amazonaws.com
+    Description: API Gateway Domain Name

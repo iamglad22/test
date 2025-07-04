@@ -1,0 +1,25 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: IFM CloudFormation - ECR Repository
+Parameters:
+  Parameters:
+  InfraCode:
+    Type: String
+#  ECRRepositoryName:
+#    Type: String
+#    Description: Name of the ECR repository
+Resources:
+  # =====================
+  # ECR, ECS Cluster & Definitions, IAM Role
+  # =====================
+  EcrRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      #RepositoryName: !Ref ECRRepositoryName
+      RepositoryName: !Sub "${InfraCode}-ecr-repo"
+      ImageScanningConfiguration:
+        ScanOnPush: true
+
+Outputs:
+  EcrRepoName:
+    Value: !Ref EcrRepository
+    Description: ECR Repository Name

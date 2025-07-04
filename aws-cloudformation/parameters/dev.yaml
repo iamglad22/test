@@ -1,0 +1,107 @@
+- ParameterKey: InfraCode
+  ParameterValue: mcfleetx
+
+- ParameterKey: VpcCIDR
+  ParameterValue: 10.0.0.0/16
+  
+#- ParameterKey: VpcName
+#  ParameterValue: mcfleetx-vpc
+#
+#- ParameterKey: InternetGatewayName
+#  ParameterValue: mcfleetx-igw
+
+- ParameterKey: PublicSubnet1CIDR
+  ParameterValue: 10.0.1.0/24
+
+#- ParameterKey: PublicSubnet1Name
+#  ParameterValue: mcfleetx-pub-subnet1
+
+- ParameterKey: PublicSubnet2CIDR
+  ParameterValue: 10.0.2.0/24
+
+#- ParameterKey: PublicSubnet2Name
+#  ParameterValue: mcfleetx-pub-subnet2
+
+- ParameterKey: PrivateSubnet1CIDR
+  ParameterValue: 10.0.3.0/24
+
+#- ParameterKey: PrivateSubnet1Name
+#  ParameterValue: mcfleetx-priv-subnet1
+
+- ParameterKey: PrivateSubnet2CIDR
+  ParameterValue: 10.0.4.0/24
+
+#- ParameterKey: PrivateSubnet2Name
+#  ParameterValue: mcfleetx-priv-subnet2
+
+#- ParameterKey: NatGatewayName
+#  ParameterValue: mcfleetx-natgw
+
+#- ParameterKey: PublicRouteTableName
+#  ParameterValue: mcfleetx-rt-pub
+
+#- ParameterKey: PrivateRouteTableName
+#  ParameterValue: mcfleetx-rt-priv
+
+#- ParameterKey: SecurityGroupECSName
+#  ParameterValue: mcfleetx-ecs-sg
+
+#- ParameterKey: SecurityGroupALBName
+#  ParameterValue: mcfleetx-alb-sg
+
+#- ParameterKey: ClusterName
+#  ParameterValue: mcfleetx-cluster
+
+- ParameterKey: ServiceName
+  ParameterValue: mcfleetx-service
+
+- ParameterKey: ECSServiceDesiredCount
+  ParameterValue: 2
+
+#- ParameterKey: APIGatewayName
+#  ParameterValue: mcfleetx-Api  
+
+- ParameterKey: ECSTaskDefinitionName
+  ParameterValue: mcfleetx-df
+
+- ParameterKey: ContainerImage
+  ParameterValue: 591915720983.dkr.ecr.us-east-1.amazonaws.com/mcfleetx-ecr-repo:latest
+
+- ParameterKey: ContainerPort
+  ParameterValue: 80
+
+#- ParameterKey: ECRRepositoryName
+#  ParameterValue: mcfleetx-ecr-repo
+
+- ParameterKey: ECSContainerName
+  ParameterValue: fleet-dashboard
+
+#- ParameterKey: S3Bucketname
+#  ParameterValue: mcfleetx-bucket
+  
+#- ParameterKey: CloudFrontOACName
+#  ParameterValue: mcfleetx-oac
+
+- ParameterKey: CloudFrontOriginPath
+  ParameterValue: /dev 
+
+#- ParameterKey: ECSRoleName
+#  ParameterValue: ecs-mcfleetx-role
+
+- ParameterKey: StageName
+  ParameterValue: dev
+
+#- ParameterKey: ALBName
+#  ParameterValue: mcfleetx-alb
+
+#- ParameterKey: ALBTGName
+#  ParameterValue:  mcfleetx-target-group
+
+#- ParameterKey: ECSLogGroupName
+#  ParameterValue:  /ecs/mcfleetx-log
+
+- ParameterKey: ECSLogGroupRetention
+  ParameterValue:  7
+
+- ParameterKey: ECSLogStreamPrefix
+  ParameterValue:  mcfleetx

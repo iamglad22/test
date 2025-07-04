@@ -1,0 +1,22 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: IFM CloudFormation - Cluster
+Parameters:
+  InfraCode:
+    Type: String
+#  ClusterName:
+#    Type: String
+#    Description: ECS Cluster Name
+Resources:
+  # =====================
+  # ECS Cluster
+  # =====================
+  MyECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      #ClusterName: !Ref ClusterName
+      ClusterName: !Sub "${InfraCode}-${ENV_NAME}"
+
+Outputs:
+  ECSClusterId:
+    Value: !Ref MyECSCluster
+    Description: ECS Cluster

@@ -5,10 +5,328 @@ on:
     branches:
       - main
 
+env:
+  AWS_REGION: us-east-1
+  #STACK_NAME: infrastructure-stack
+  ENV_NAME: dev
+  PARAMS_FILE: aws-cloudformation/parameters/dev.yaml
+
 jobs:
-  deploy:
+  validate_files:
     runs-on: ubuntu-latest
 
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      #- name: Install yq dependencies
+      #  run: |
+      #    # Install yq
+      #    sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+      #    sudo chmod +x /usr/local/bin/yq
+      #    yq --version
+
+      - name: Install cfn-lint dependencies
+        run: |
+          # Install cfn-lint
+          python3 -m pip install --upgrade pip
+          pip3 install cfn-lint
+          cfn-lint --version
+
+      #- name: Configure AWS Credentials
+      #  uses: aws-actions/configure-aws-credentials@v2
+      #  with:
+      #    aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #    aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #    aws-region: ${{ env.AWS_REGION }}
+
+      - name: Lint CloudFormation templates
+        run: cfn-lint aws-cloudformation/templates/*.yaml
+
+    #  - name: Validate main template
+    #    run: |
+    #      aws cloudformation validate-template \
+    #        --template-body file://aws-cloudformation/templates/main.yaml
+  deploy_network:
+    runs-on: ubuntu-latest
+    needs: validate_files
+    outputs:
+      vpc_name: ${{ steps.network_output.outputs.vpc_name }} \
+      public_subnet1: ${{ steps.network_output.outputs.public_subnet1 }} \
+      public_subnet2: ${{ steps.network_output.outputs.public_subnet2 }} \
+      private_subnet1: ${{ steps.network_output.outputs.private_subnet1 }} \
+      private_subnet2: ${{ steps.network_output.outputs.private_subnet2 }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      - name: Deploy CloudFormation Stack - Networking
+        run: |
+          aws cloudformation deploy \
+            --template-file aws-cloudformation/templates/aws-networking.yaml \
+            --stack-name ${{ env.ENV_NAME }}-network \
+            --parameter-overrides $(yq eval '. as $parameter | keys[] | "\(. + "=" + $parameter[.])"' ${{ env.PARAMS_FILE }})
+        #  --capabilities CAPABILITY_NAMED_IAM
+      #  uses: ./.github/actions
+      #  with:
+      #    stack-name: dev-infrastucture
+      #    template-file: cloudformation/templates/app.yaml
+      #   parameter-file: cloudformation/parameters/dev.yaml
+        #run: |
+        #  aws cloudformation deploy \
+        #    --template-file cloudformation/main.yaml \
+        #    --stack-name github-cfn-stack \
+        #    --capabilities CAPABILITY_NAMED_IAM
+      - name: Get Network Outputs
+        id: network_output
+        run: |
+          VPC_NAME=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.ENV_NAME }}-network \
+            --query "Stacks[0].Outputs[?OutputKey=='VPCId'].OutputValue" \
+            --output text)
+          PUBLIC_SUBNET1=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.ENV_NAME }}-network \
+            --query "Stacks[0].Outputs[?OutputKey=='PublicSubnetId1'].OutputValue" \
+            --output text)
+          PUBLIC_SUBNET2=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.ENV_NAME }}-network \
+            --query "Stacks[0].Outputs[?OutputKey=='PublicSubnetId2'].OutputValue" \
+            --output text)
+          PRIVATE_SUBNET1=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.ENV_NAME }}-network \
+            --query "Stacks[0].Outputs[?OutputKey=='PrivateSubnetId1'].OutputValue" \
+            --output text)
+          PRIVATE_SUBNET1=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.ENV_NAME }}-network \
+            --query "Stacks[0].Outputs[?OutputKey=='PrivateSubnetId1'].OutputValue" \
+            --output text)
+          
+          echo "vpc_name=$VPC_NAME" >> $GITHUB_OUTPUT
+          echo "public_subnet1=$PUBLIC_SUBNET1" >> $GITHUB_OUTPUT
+          echo "public_subnet2=$PUBLIC_SUBNET2" >> $GITHUB_OUTPUT
+          echo "private_subnet1=$PRIVATE_SUBNET1" >> $GITHUB_OUTPUT
+          echo "private_subnet2=$PRIVATE_SUBNET2" >> $GITHUB_OUTPUT
+
+  deploy_sg:
+    runs-on: ubuntu-latest
+    needs: deploy_network
+    outputs:
+      sg_ecs_id: ${{ steps.security_group_output.outputs.sg_ecs_id }} \
+      sg_alb_id: ${{ steps.security_group_output.outputs.sg_alb_id }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3      
+      - name: Deploy CloudFormation Stack - Security Group
+        run: |
+          aws cloudformation deploy \
+            --template-file aws-cloudformation/templates/aws-sg.yaml \
+            --stack-name ${{ env.ENV_NAME }}-security_group \
+            --parameter-overrides VPCId=${{ needs.deploy_network.outputs.vpc_name }}
+      
+      - name: Get Security Group Outputs
+        id: security_group_output
+        run: |
+          SG_ECS_ID=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.ENV_NAME }}-security_group \
+            --query "Stacks[0].Outputs[?OutputKey=='SgEcsId'].OutputValue" \
+            --output text)
+          SG_ALB_ID=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.ENV_NAME }}-network \
+            --query "Stacks[0].Outputs[?OutputKey=='SgAlbId'].OutputValue" \
+            --output text)
+                    
+            echo "sg_ecs_id=$SG_ECS_ID" >> $GITHUB_OUTPUT
+            echo "sg_alb_id=$SG_ALB_ID" >> $GITHUB_OUTPUT
+      
+  deploy_alb:
+    runs-on: ubuntu-latest
+    needs: [deploy_network, deploy_sg]
+    outputs:
+      alb_dns_name: ${{ steps.alb_output.outputs.alb_dns_name }} \
+      alb_target_group: ${{ steps.alb_output.outputs.alb_target_group }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      - name: Deploy CloudFormation Stack - Application Load Balancer
+        run: |
+          aws cloudformation deploy \
+            --template-file aws-cloudformation/templates/aws-ecs-loadbalancer.yaml \
+            --stack-name ${{ env.ENV_NAME }}-alb \
+            --parameter-overrides \
+              VPCId=${{ needs.deploy_network.outputs.vpc_name }} \
+              PublicSubnetId1=${{ needs.deploy_network.outputs.public_subnet1 }} \
+              PublicSubnetId2=${{ needs.deploy_network.outputs.public_subnet2 }} \
+              SgAlbId=${{ needs.deploy_sg.outputs.sg_alb_id }} 
+      
+      - name: Get Application Load Balancer Outputs
+        id: alb_output
+        run: |
+          ALB_DNS_NAME=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.ENV_NAME }}-alb \
+            --query "Stacks[0].Outputs[?OutputKey=='AlbDnsName'].OutputValue" \
+            --output text)
+          ALB_TARGET_GROUP=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.ENV_NAME }}-alb \
+            --query "Stacks[0].Outputs[?OutputKey=='AlbTgId'].OutputValue" \
+            --output text)
+            
+                    
+            echo "alb_dns_name=$ALB_DNS_NAME" >> $GITHUB_OUTPUT
+            echo "alb_target_group=$ALB_TARGET_GROUP" >> $GITHUB_OUTPUT
+
+  deploy_api-gateway:
+    runs-on: ubuntu-latest
+    needs: deploy_alb
+    outputs:
+      api_gateway_id: ${{ steps.api_gateway_output.outputs.api_gateway_id }} \
+      api_gateway_domain_name: ${{ steps.api_gateway_output.outputs.api_gateway_domain_name }}
+
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      - name: Deploy CloudFormation Stack - API Gateway
+        run: |
+          aws cloudformation deploy \
+            --template-file aws-cloudformation/templates/aws-apigateway.yaml \
+            --stack-name ${{ env.ENV_NAME }}-api_gateway \
+            --parameter-overrides \
+              AlbDnsName=${{ needs.deploy_alb.outputs.alb_dns_name }}
+
+      
+      - name: Get API Gateway Outputs
+        id: api_gateway_output
+        run: |
+          API_GATEWAY_ID=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.ENV_NAME }}-api_gateway \
+            --query "Stacks[0].Outputs[?OutputKey=='ApiGatewayId'].OutputValue" \
+            --output text)
+
+          API_GATEWAY_DOMAIN_NAME=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.ENV_NAME }}-api_gateway \
+            --query "Stacks[0].Outputs[?OutputKey=='ApiGatewayDomainName'].OutputValue" \
+            --output text)
+                    
+            echo "api_gateway_id=$API_GATEWAY_ID" >> $GITHUB_OUTPUT
+            echo "api_gateway_domain_name=$API_GATEWAY_DOMAIN_NAME" >> $GITHUB_OUTPUT
+
+
+  deploy_s3:
+    runs-on: ubuntu-latest
+    #needs: configure
+    outputs:
+      s3_regional_domain_name: ${{ steps.s3_output.outputs.s3_regional_domain_name }} \
+      s3_arn: ${{ steps.s3_output.outputs.s3_arn }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      - name: Deploy CloudFormation Stack - S3 Bucket
+        run: |
+          aws cloudformation deploy \
+            --template-file aws-cloudformation/templates/aws-s3-cf.yaml \
+            --stack-name ${{ env.ENV_NAME }}-s3
+
+      
+      - name: Get S3 Bucket Outputs
+        id: s3_output
+        run: |
+          S3_REGIONAL_DOMAIN_NAME=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.ENV_NAME }}-s3 \
+            --query "Stacks[0].Outputs[?OutputKey=='S3RegionalDomainName'].OutputValue" \
+            --output text)
+          S3_ARN=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.ENV_NAME }}-s3 \
+            --query "Stacks[0].Outputs[?OutputKey=='S3Arn'].OutputValue" \
+            --output text)
+                    
+            echo "s3_regional_domain_name=$S3_REGIONAL_DOMAIN_NAME" >> $GITHUB_OUTPUT            
+            echo "s3_arn=$S3_ARN" >> $GITHUB_OUTPUT 
+
+  deploy_cloudfront:
+    runs-on: ubuntu-latest
+    needs: [deploy_api-gateway, deploy_s3]
+    outputs:
+      cloudfront_url: ${{ steps.cloudfront_output.outputs.cloudfront_url }} \
+      cloudfront_id: ${{ steps.cloudfront_output.outputs.cloudfront_id }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      - name: Deploy CloudFormation Stack - Cloudfront
+        run: |
+          aws cloudformation deploy \
+            --template-file aws-cloudformation/templates/aws-cloudfront.yaml \
+            --stack-name ${{ env.ENV_NAME }}-cloudfront \
+            --parameter-overrides \
+              S3RegionalDomainName=${{ needs.deploy_s3.outputs.s3_regional_domain_name }} \
+              ApiGatewayDomainName=${{ needs.deploy_api-gateway.outputs.api_gateway_domain_name }}
+
+      
+      - name: Get Cloudfront Outputs
+        id: cloudfront_output
+        run: |
+          CLOUDFRONT_URL=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.ENV_NAME }}-cloudfront \
+            --query "Stacks[0].Outputs[?OutputKey=='CloudFrontURL'].OutputValue" \
+            --output text)
+          CLOUDFRONT_ID=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.ENV_NAME }}-cloudfront \
+            --query "Stacks[0].Outputs[?OutputKey=='CloudFrontId'].OutputValue" \
+            --output text)
+                    
+            echo "cloudfront_url=$CLOUDFRONT_URL" >> $GITHUB_OUTPUT  
+            echo "cloudfront_id=$CLOUDFRONT_ID" >> $GITHUB_OUTPUT
+
+
+  deploy_s3-policy:
+    runs-on: ubuntu-latest
+    needs: [deploy_cloudfront]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      - name: Deploy CloudFormation Stack - S3 Bucket Policy
+        run: |
+          aws cloudformation deploy \
+            --template-file aws-cloudformation/templates/aws-s3-policy.yaml \
+            --stack-name ${{ env.ENV_NAME }}-s3_policy \
+            --parameter-overrides \
+              CloudFrontId=${{ needs.deploy_cloudfront.outputs.cloudfront_id }}
+
+  deploy_ecr:
+    runs-on: ubuntu-latest
+    outputs:
+      ecr_repository_name: ${{ steps.ecr_output.outputs.ecr_repository_name }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Deploy CloudFormation Stack - ECR
+        run: |
+          aws cloudformation deploy \
+            --template-file aws-cloudformation/templates/aws-ecr.yaml \
+            --stack-name ${{ env.ENV_NAME }}-ecs_ecr \
+            --parameter-overrides \
+              ENV_NAME=${{ env.ENV_NAME }}
+
+      
+      - name: Get ECR Outputs
+        id: ecr_output
+        run: |
+          ECR_REPOSITORY_NAME=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.ENV_NAME }}-ecs_ecr \
+            --query "Stacks[0].Outputs[?OutputKey=='EcrRepoName'].OutputValue" \
+            --output text)
+ 
+            echo "ecr_repository_name=$ECR_REPOSITORY_NAME" >> $GITHUB_OUTPUT
+
+
+
+  deploy_ecr_docker_image:
+    runs-on: ubuntu-latest
+    needs: deploy_ecr
+    #outputs:
+    #  task_definition_id: ${{ steps.ecs_taskdefinition_output.outputs.task_definition_id }}
+    #env:
+    #  IMAGE_TAG: ${{ github.ref_name }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -18,11 +336,191 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region: ${{ env.AWS_REGION }}
+          
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Deploy CloudFormation Stack
+      - name: Build Docker image
+        run: |
+          IMAGE_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ needs.deploy_ecr.outputs.ecr_repository_name }}:latest
+        
+          echo "Building image: $IMAGE_URI"
+          docker build -t $IMAGE_URI:latest .
+
+        #  REPO_NAME=${{ needs.deploy_ecs-req.outputs.ecr_repository_name }}
+        #  REGION=${{ env.AWS_REGION }}
+        #  ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+        #  IMAGE_URI=${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/${REPO_NAME}:latest
+
+      - name: Push Docker image to ECR
+        run: |
+          docker push $IMAGE_URI:latest
+        # echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
+
+        #  REPO_NAME=my-ecr-repo
+        #  REGION=${{ env.AWS_REGION }}
+        #  ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+        #  IMAGE_URI=${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/${REPO_NAME}:latest
+
+
+
+  deploy_ecs-req:
+    runs-on: ubuntu-latest
+    needs: [deploy_api-gateway]
+    outputs:
+      loggroup_id: ${{ steps.ecs_loggroup_output.outputs.loggroup_id }} \
+      ecs_role_arn: ${{ steps.ecs_role_output.outputs.ecs_role_arn }} \
+      ecs_cluster_id: ${{ steps.ecs_cluster_output.outputs.ecs_cluster_id }}
+      #ecr_repository_name: ${{ steps.ecr_output.outputs.ecr_repository_name }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      - name: Deploy CloudFormation Stack - ECS Log Group
         run: |
           aws cloudformation deploy \
-            --template-file cloudformation/main.yaml \
-            --stack-name github-cfn-stack \
-            --capabilities CAPABILITY_NAMED_IAM
+            --template-file aws-cloudformation/templates/aws-ecs-loggroup.yaml \
+            --stack-name ${{ env.ENV_NAME }}-ecs-loggroup \
+            --parameter-overrides \
+              ENV_NAME=${{ env.ENV_NAME }} \
+              ServiceName=${{ needs.deploy_api-gateway.outputs.api_gateway_domain_name }}
+
+      
+      - name: Get ECS Log Group Outputs
+        id: ecs_loggroup_output
+        run: |
+          LOGGROUP_ID=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.ENV_NAME }}-ecs-loggroup \
+            --query "Stacks[0].Outputs[?OutputKey=='LogGroupId'].OutputValue" \
+            --output text)
+ 
+            echo "loggroup_id=$LOGGROUP_ID" >> $GITHUB_OUTPUT  
+
+
+      - name: Deploy CloudFormation Stack - ECS Role
+        run: |
+          aws cloudformation deploy \
+            --template-file aws-cloudformation/templates/aws-ecs-role.yaml \
+            --stack-name ${{ env.ENV_NAME }}-ecs_role
+
+      
+      - name: Get ECS IAM Role Outputs
+        id: ecs_role_output
+        run: |
+          ECS_ROLE_ARN=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.ENV_NAME }}-ecs_role \
+            --query "Stacks[0].Outputs[?OutputKey=='EcsRoleArn'].OutputValue" \
+            --output text)
+                    
+            echo "ecs_role_arn=$ECS_ROLE_ARN" >> $GITHUB_OUTPUT
+
+      - name: Deploy CloudFormation Stack - ECS Cluster
+        run: |
+          aws cloudformation deploy \
+            --template-file aws-cloudformation/templates/aws-ecs-cluster.yaml \
+            --stack-name ${{ env.ENV_NAME }}-ecs_cluster \
+            --parameter-overrides \
+              ENV_NAME=${{ env.ENV_NAME }}
+
+      
+      - name: Get ECS Cluster Outputs
+        id: ecs_cluster_output
+        run: |
+          ECS_CLUSTER_ID=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.ENV_NAME }}-ecs_cluster \
+            --query "Stacks[0].Outputs[?OutputKey=='ECSClusterId'].OutputValue" \
+            --output text)
+ 
+            echo "ecs_cluster_id=$ECS_CLUSTER_ID" >> $GITHUB_OUTPUT  
+
+
+    #  - name: Deploy CloudFormation Stack - ECR
+    #    run: |
+    #      aws cloudformation deploy \
+    #        --template-file aws-cloudformation/templates/aws-ecr.yaml \
+    #        --stack-name ${{ env.ENV_NAME }}-ecs_ecr \
+    #        --parameter-overrides \
+    #          ENV_NAME=${{ env.ENV_NAME }}
+
+      
+    #  - name: Get ECS Cluster Outputs
+    #    id: ecr_output
+    #    run: |
+    #      ECR_REPOSITORY_NAME=$(aws cloudformation describe-stacks \
+    #        --stack-name ${{ env.ENV_NAME }}-ecs_ecr \
+    #        --query "Stacks[0].Outputs[?OutputKey=='EcrRepoName'].OutputValue" \
+    #        --output text)
+ 
+    #        echo "ecr_repository_name=$ECR_REPOSITORY_NAME" >> $GITHUB_OUTPUT
+
+  deploy_ecs-microservice:
+    runs-on: ubuntu-latest
+    needs: [deploy_ecr, deploy_ecs-req, deploy_alb, deploy_network, deploy_sg]
+    outputs:
+      task_definition_id: ${{ steps.ecs_taskdefinition_output.outputs.task_definition_id }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3            
+      - name: Deploy CloudFormation Stack - ECS Task Definition
+        run: |
+          aws cloudformation deploy \
+            --template-file aws-cloudformation/templates/aws-ecs-taskdefinition.yaml \
+            --stack-name ${{ env.ENV_NAME }}-ecs_taskdefinition \
+            --parameter-overrides \
+              LogGroupId=${{ needs.deploy_ecs-req.outputs.loggroup_id }} \
+              EcsRoleArn=${{ needs.deploy_ecs-req.outputs.ecs_role_arn }}
+
+      
+      - name: Get ECS Task Definition Outputs
+        id: ecs_taskdefinition_output
+        run: |
+          TASK_DEFINITION_ID=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.ENV_NAME }}-ecs_taskdefinition \
+            --query "Stacks[0].Outputs[?OutputKey=='TaskDefinitionId'].OutputValue" \
+            --output text)
+ 
+            echo "task_definition_id=$TASK_DEFINITION_ID" >> $GITHUB_OUTPUT  
+
+
+      - name: Deploy CloudFormation Stack - ECS Service
+        run: |
+          aws cloudformation deploy \
+            --template-file aws-cloudformation/templates/aws-ecs-service.yaml \
+            --stack-name ${{ env.ENV_NAME }}-ecs_service \
+            --parameter-overrides \
+              ECSClusterId=${{ needs.deploy_ecs-req.outputs.ecs_cluster_id }} \
+              TaskDefinitionId=${{ steps.ecs_taskdefinition_output.outputs.task_definition_id }} \
+              AlbTgId=${{ needs.deploy_alb.outputs.alb_target_group }} \
+              PrivateSubnetId1=${{ needs.deploy_network.outputs.private_subnet1 }} \
+              PrivateSubnetId2=${{ needs.deploy_network.outputs.private_subnet2 }} \
+              SgEcsId=${{ needs.deploy_sg.outputs.sg_ecs_id }}
+
+         
+
+
+
+
+
+
+
+
+
+
+
+
+
+      
+#          - name: Describe Stack Outputs
+#        id: describe
+#        run: |
+#          JSON=$(aws cloudformation describe-stacks \
+#            --stack-name $STACK_NAME \
+#            --output json)
+#          echo "$JSON" | jq -r '.Stacks[0].Outputs[] | "\(.OutputKey)=\(.OutputValue)"' >> $GITHUB_ENV
+
+#      - name: Show Collected Outputs
+#        run: |
+#          echo "ALB URL: $ALBEndpoint"
+#          echo "API URL: $HTTPApiURL"
+#          echo "CF URL: $CloudFrontURL"

@@ -1,0 +1,30 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: IFM CloudFormation - ECS IAM Role
+Parameters:
+  InfraCode:
+    Type: String
+  #ECSRoleName:
+  #  Type: String
+  #  Description: Name of ECS Task Execution Role Policy
+Resources:
+  # =====================
+  # ECS IAM Role
+  # =====================
+  ECSExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${InfraCode}-ecs-role"
+      #RoleName: !Ref ECSRoleName
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+
+Outputs:
+  EcsRoleArn:
+  Value: !GetAtt ECSExecutionRole.Arn
+  Description: ECS Role ARN
