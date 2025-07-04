@@ -120,14 +120,14 @@ jobs:
         run: |
           aws cloudformation deploy \
             --template-file aws-cloudformation/templates/aws-sg.yaml \
-            --stack-name ${{ env.ENV_NAME }}-security_group \
+            --stack-name ${{ env.ENV_NAME }}-security-group \
             --parameter-overrides VPCId=${{ needs.deploy_network.outputs.vpc_name }}
       
       - name: Get Security Group Outputs
         id: security_group_output
         run: |
           SG_ECS_ID=$(aws cloudformation describe-stacks \
-            --stack-name ${{ env.ENV_NAME }}-security_group \
+            --stack-name ${{ env.ENV_NAME }}-security-group \
             --query "Stacks[0].Outputs[?OutputKey=='SgEcsId'].OutputValue" \
             --output text)
           SG_ALB_ID=$(aws cloudformation describe-stacks \
@@ -189,7 +189,7 @@ jobs:
         run: |
           aws cloudformation deploy \
             --template-file aws-cloudformation/templates/aws-apigateway.yaml \
-            --stack-name ${{ env.ENV_NAME }}-api_gateway \
+            --stack-name ${{ env.ENV_NAME }}-api-gateway \
             --parameter-overrides \
               AlbDnsName=${{ needs.deploy_alb.outputs.alb_dns_name }}
 
@@ -198,12 +198,12 @@ jobs:
         id: api_gateway_output
         run: |
           API_GATEWAY_ID=$(aws cloudformation describe-stacks \
-            --stack-name ${{ env.ENV_NAME }}-api_gateway \
+            --stack-name ${{ env.ENV_NAME }}-api-gateway \
             --query "Stacks[0].Outputs[?OutputKey=='ApiGatewayId'].OutputValue" \
             --output text)
 
           API_GATEWAY_DOMAIN_NAME=$(aws cloudformation describe-stacks \
-            --stack-name ${{ env.ENV_NAME }}-api_gateway \
+            --stack-name ${{ env.ENV_NAME }}-api-gateway \
             --query "Stacks[0].Outputs[?OutputKey=='ApiGatewayDomainName'].OutputValue" \
             --output text)
                     
@@ -232,6 +232,8 @@ jobs:
           aws cloudformation deploy \
             --template-file aws-cloudformation/templates/aws-s3-cf.yaml \
             --stack-name ${{ env.ENV_NAME }}-s3
+            --parameter-overrides \
+              $(yq eval '. as $parameter | keys[] | "\(. + "=" + $parameter[.])"' ${{ env.PARAMS_FILE }})
 
       
       - name: Get S3 Bucket Outputs
@@ -299,7 +301,7 @@ jobs:
         run: |
           aws cloudformation deploy \
             --template-file aws-cloudformation/templates/aws-s3-policy.yaml \
-            --stack-name ${{ env.ENV_NAME }}-s3_policy \
+            --stack-name ${{ env.ENV_NAME }}-s3-policy \
             --parameter-overrides \
               S3BucketId=${{ needs.deploy_s3.outputs.s3_id }}
               S3Arn=${{ needs.deploy_s3.outputs.s3_arn }}
@@ -324,7 +326,7 @@ jobs:
         run: |
           aws cloudformation deploy \
             --template-file aws-cloudformation/templates/aws-ecr.yaml \
-            --stack-name ${{ env.ENV_NAME }}-ecs_ecr \
+            --stack-name ${{ env.ENV_NAME }}-ecs-ecr \
             --parameter-overrides \
               ENV_NAME=${{ env.ENV_NAME }}
 
@@ -333,7 +335,7 @@ jobs:
         id: ecr_output
         run: |
           ECR_REPOSITORY_NAME=$(aws cloudformation describe-stacks \
-            --stack-name ${{ env.ENV_NAME }}-ecs_ecr \
+            --stack-name ${{ env.ENV_NAME }}-ecs-ecr \
             --query "Stacks[0].Outputs[?OutputKey=='EcrRepoName'].OutputValue" \
             --output text)
  
@@ -423,14 +425,14 @@ jobs:
         run: |
           aws cloudformation deploy \
             --template-file aws-cloudformation/templates/aws-ecs-role.yaml \
-            --stack-name ${{ env.ENV_NAME }}-ecs_role
+            --stack-name ${{ env.ENV_NAME }}-ecs-role
 
       
       - name: Get ECS IAM Role Outputs
         id: ecs_role_output
         run: |
           ECS_ROLE_ARN=$(aws cloudformation describe-stacks \
-            --stack-name ${{ env.ENV_NAME }}-ecs_role \
+            --stack-name ${{ env.ENV_NAME }}-ecs-role \
             --query "Stacks[0].Outputs[?OutputKey=='EcsRoleArn'].OutputValue" \
             --output text)
                     
@@ -440,7 +442,7 @@ jobs:
         run: |
           aws cloudformation deploy \
             --template-file aws-cloudformation/templates/aws-ecs-cluster.yaml \
-            --stack-name ${{ env.ENV_NAME }}-ecs_cluster \
+            --stack-name ${{ env.ENV_NAME }}-ecs-cluster \
             --parameter-overrides \
               ENV_NAME=${{ env.ENV_NAME }}
 
@@ -449,7 +451,7 @@ jobs:
         id: ecs_cluster_output
         run: |
           ECS_CLUSTER_ID=$(aws cloudformation describe-stacks \
-            --stack-name ${{ env.ENV_NAME }}-ecs_cluster \
+            --stack-name ${{ env.ENV_NAME }}-ecs-cluster \
             --query "Stacks[0].Outputs[?OutputKey=='ECSClusterId'].OutputValue" \
             --output text)
  
@@ -460,7 +462,7 @@ jobs:
     #    run: |
     #      aws cloudformation deploy \
     #        --template-file aws-cloudformation/templates/aws-ecr.yaml \
-    #        --stack-name ${{ env.ENV_NAME }}-ecs_ecr \
+    #        --stack-name ${{ env.ENV_NAME }}-ecs-ecr \
     #        --parameter-overrides \
     #          ENV_NAME=${{ env.ENV_NAME }}
 
@@ -487,7 +489,7 @@ jobs:
         run: |
           aws cloudformation deploy \
             --template-file aws-cloudformation/templates/aws-ecs-taskdefinition.yaml \
-            --stack-name ${{ env.ENV_NAME }}-ecs_taskdefinition \
+            --stack-name ${{ env.ENV_NAME }}-ecs-taskdefinition \
             --parameter-overrides \
               LogGroupId=${{ needs.deploy_ecs-req.outputs.loggroup_id }} \
               EcsRoleArn=${{ needs.deploy_ecs-req.outputs.ecs_role_arn }}
@@ -497,7 +499,7 @@ jobs:
         id: ecs_taskdefinition_output
         run: |
           TASK_DEFINITION_ID=$(aws cloudformation describe-stacks \
-            --stack-name ${{ env.ENV_NAME }}-ecs_taskdefinition \
+            --stack-name ${{ env.ENV_NAME }}-ecs-taskdefinition \
             --query "Stacks[0].Outputs[?OutputKey=='TaskDefinitionId'].OutputValue" \
             --output text)
  
@@ -508,7 +510,7 @@ jobs:
         run: |
           aws cloudformation deploy \
             --template-file aws-cloudformation/templates/aws-ecs-service.yaml \
-            --stack-name ${{ env.ENV_NAME }}-ecs_service \
+            --stack-name ${{ env.ENV_NAME }}-ecs-service \
             --parameter-overrides \
               ECSClusterId=${{ needs.deploy_ecs-req.outputs.ecs_cluster_id }} \
               TaskDefinitionId=${{ steps.ecs_taskdefinition_output.outputs.task_definition_id }} \
