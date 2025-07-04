@@ -9,7 +9,7 @@ env:
   AWS_REGION: us-east-1
   #STACK_NAME: infrastructure-stack
   ENV_NAME: dev
-  PARAMS_FILE: aws-cloudformation/parameters/dev.yaml
+  PARAMS_FILE: aws-cloudformation/parameters/dev.json
 
 jobs:
   validate_files:
@@ -41,7 +41,7 @@ jobs:
       #    aws-region: ${{ env.AWS_REGION }}
 
       - name: Lint CloudFormation templates
-        run: cfn-lint aws-cloudformation/templates/*.yaml
+        run: cfn-lint -t aws-cloudformation/templates/*.yaml --parameters ${{ env.PARAMS_FILE }}
 
     #  - name: Validate main template
     #    run: |
