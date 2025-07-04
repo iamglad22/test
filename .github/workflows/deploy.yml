@@ -317,8 +317,8 @@ jobs:
 
   deploy_ecr:
     runs-on: ubuntu-latest
-    env:
-      PARAMS_FILE: PARAMS=$(jq -r '.[] | "\(.ParameterKey)=\(.ParameterValue)"' aws-cloudformation/parameters/dev.json)
+    #env:
+    #  PARAMS_FILE: PARAMS=$(jq -r '.[] | "\(.ParameterKey)=\(.ParameterValue)"' aws-cloudformation/parameters/dev.json)
     outputs:
       ecr_repository_name: ${{ steps.ecr_output.outputs.ecr_repository_name }}
     steps:
@@ -334,12 +334,13 @@ jobs:
 
       - name: Deploy CloudFormation Stack - ECR
         run: |
+          PARAMS=$(jq -r '.[] | "\(.ParameterKey)=\(.ParameterValue)"' ${{ env.PARAMS_FILE }})
           aws cloudformation deploy \
             --template-file aws-cloudformation/templates/aws-ecr.yaml \
             --stack-name ${{ env.ENV_NAME }}-ecs-ecr \
             --parameter-overrides \
               ENV_NAME=${{ env.ENV_NAME }} \
-              $PARAMS_FILE
+              $PARAMS
 
       
       - name: Get ECR Outputs
