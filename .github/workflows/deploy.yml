@@ -10,6 +10,7 @@ env:
   #STACK_NAME: infrastructure-stack
   ENV_NAME: dev
   PARAMS_FILE: aws-cloudformation/parameters/dev.json
+  
 
 jobs:
   validate_files:
@@ -56,7 +57,7 @@ jobs:
     #        --template-body file://aws-cloudformation/templates/main.yaml
   deploy_network:
     runs-on: ubuntu-latest
-    needs: validate_files
+    #needs: validate_files
     outputs:
       vpc_name: ${{ steps.network_output.outputs.vpc_name }} \
       public_subnet1: ${{ steps.network_output.outputs.public_subnet1 }} \
@@ -238,10 +239,12 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
       - name: Deploy CloudFormation Stack - S3 Bucket
         run: |
+          PARAMS=$(jq -r '.[] | "\(.ParameterKey)=\(.ParameterValue)"' ${{ env.PARAMS_FILE }})
           aws cloudformation deploy \
             --template-file aws-cloudformation/templates/aws-s3-cf.yaml \
             --stack-name ${{ env.ENV_NAME }}-s3 \
-            --parameter-overrides file://$PARAMS_FILE
+            --parameter-overrides $PARAMS
+        #    --parameter-overrides file://$PARAMS_FILE
 
       
       - name: Get S3 Bucket Outputs
@@ -317,8 +320,6 @@ jobs:
 
   deploy_ecr:
     runs-on: ubuntu-latest
-    #env:
-    #  PARAMS_FILE: PARAMS=$(jq -r '.[] | "\(.ParameterKey)=\(.ParameterValue)"' aws-cloudformation/parameters/dev.json)
     outputs:
       ecr_repository_name: ${{ steps.ecr_output.outputs.ecr_repository_name }}
     steps:
@@ -361,6 +362,7 @@ jobs:
     #outputs:
     #  task_definition_id: ${{ steps.ecs_taskdefinition_output.outputs.task_definition_id }}
     #env:
+    #  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
     #  IMAGE_TAG: ${{ github.ref_name }}
     steps:
       - name: Checkout Code
@@ -378,8 +380,12 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build Docker image
+        env:
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          AWS_REGION: ${{ env.AWS_REGION }}
+          ECR_REPO_NAME: ${{ needs.deploy_ecr.outputs.ecr_repository_name }}
         run: |
-          IMAGE_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ needs.deploy_ecr.outputs.ecr_repository_name }}:latest
+          IMAGE_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_NAME
         
           echo "Building image: $IMAGE_URI"
           docker build -t $IMAGE_URI:latest .
