@@ -42,12 +42,12 @@ jobs:
 
       - name: Lint CloudFormation templates
         env:
-          PARAMS_FILE: aws-cloudformation/parameters/dev.json
+          PARAMETER_FILE: aws-cloudformation/parameters/dev.json
         #run: cfn-lint -t aws-cloudformation/**/*.yaml --parameters ${{ env.PARAMS_FILE }}
         run: |
           find aws-cloudformation/ -type f \( -name "*.yaml" -o -name "*.yml" -o -name "*.json" \) -not -path "aws-cloudformation/parameters/*" | while read file; do
             echo "Linting $file"
-            cfn-lint --parameters file://$PARAMS_FILE "$file" || exit 1
+            cfn-lint --parameters file://$PARAMETER_FILE -t "$file" || exit 1
           done
 
     #  - name: Validate main template
@@ -241,7 +241,7 @@ jobs:
           aws cloudformation deploy \
             --template-file aws-cloudformation/templates/aws-s3-cf.yaml \
             --stack-name ${{ env.ENV_NAME }}-s3 \
-            --parameters file://$PARAMS_FILE
+            --parameter-overrides file://$PARAMS_FILE
 
       
       - name: Get S3 Bucket Outputs
