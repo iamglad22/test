@@ -19,7 +19,7 @@ Resources:
     Type: AWS::ApiGatewayV2::Api
     Properties:
       #Name: !Ref APIGatewayName
-      name: !Sub "${InfraCode}-api"
+      Name: !Sub "${InfraCode}-api"
       ProtocolType: HTTP
       CorsConfiguration:
         AllowOrigins:

@@ -31,9 +31,6 @@ Parameters:
 #    Type: String
 #  PrivateRouteTableName:
 #    Type: String
-  ContainerPort:
-    Type: Number
-    Description: The port the container will listen on
 
 
 Resources:

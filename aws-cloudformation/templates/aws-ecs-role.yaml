@@ -26,5 +26,5 @@ Resources:
 
 Outputs:
   EcsRoleArn:
-  Value: !GetAtt ECSExecutionRole.Arn
-  Description: ECS Role ARN
+    Value: !GetAtt ECSExecutionRole.Arn
+    Description: ECS Role ARN

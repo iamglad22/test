@@ -32,3 +32,5 @@ Outputs:
   S3Arn:
     Value: !GetAtt S3Bucket.Arn
     Description: S3 bucket ARN
+  S3BucketId:
+    Value: !Ref S3Bucket
