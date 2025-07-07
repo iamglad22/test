@@ -80,6 +80,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
+          #role-to-assume: 
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
@@ -277,7 +278,8 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        #uses: aws-actions/configure-aws-credentials@v2
+        uses: ./.github/actions/aws-config
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -421,7 +423,8 @@ jobs:
   deploy_ecr_docker_image:
     runs-on: ubuntu-latest
     needs: deploy_ecr
-    #outputs:
+    outputs:
+      image_uri: ${{ steps.docker_image_build_output.outputs.image_uri }}
     #  task_definition_id: ${{ steps.ecs_taskdefinition_output.outputs.task_definition_id }}
     #env:
     #  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
@@ -442,12 +445,14 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build Docker image
+        id: docker_image_build_output
         env:
           AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
           AWS_REGION: ${{ env.AWS_REGION }}
           ECR_REPO_NAME: ${{ needs.deploy_ecr.outputs.ecr_repository_name }}
         run: |
           IMAGE_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_NAME
+          echo "image_uri=$IMAGE_URI" >> "$GITHUB_OUTPUT"
           echo "IMAGE_URI=$IMAGE_URI" >> "$GITHUB_ENV"
           echo "Building image: $IMAGE_URI"
           docker build -t $IMAGE_URI:latest microservice/app
@@ -466,7 +471,6 @@ jobs:
         #  REGION=${{ env.AWS_REGION }}
         #  ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
         #  IMAGE_URI=${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/${REPO_NAME}:latest
-
 
 
   deploy_ecs-req:
@@ -541,7 +545,7 @@ jobs:
             --template-file aws-cloudformation/templates/aws-ecs-cluster.yaml \
             --stack-name ${{ env.ENV_NAME }}-ecs-cluster \
             --parameter-overrides \
-              EnvName=$ENV_NAME
+              EnvName=$ENV_NAME \
               $PARAMS
 
       
@@ -577,7 +581,7 @@ jobs:
 
   deploy_ecs-microservice:
     runs-on: ubuntu-latest
-    needs: [deploy_ecr, deploy_ecs-req, deploy_alb, deploy_network, deploy_sg]
+    needs: [deploy_ecr, deploy_ecr_docker_image, deploy_ecs-req, deploy_alb, deploy_network, deploy_sg]
     outputs:
       task_definition_id: ${{ steps.ecs_taskdefinition_output.outputs.task_definition_id }}
     steps:
@@ -598,16 +602,23 @@ jobs:
             --parameter-overrides \
               LogGroupId=${{ needs.deploy_ecs-req.outputs.loggroup_id }} \
               EcsRoleArn=${{ needs.deploy_ecs-req.outputs.ecs_role_arn }} \
+              ContainerImage=${{ needs.deploy_ecr_docker_image.outputs.image_uri }} \
               $PARAMS
 
       
       - name: Get ECS Task Definition Outputs
         id: ecs_taskdefinition_output
+        env:
+          env:
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          AWS_REGION: ${{ env.AWS_REGION }}
+          ECR_REPO_NAME: ${{ needs.deploy_ecr.outputs.ecr_repository_name }}
         run: |
           TASK_DEFINITION_ID=$(aws cloudformation describe-stacks \
             --stack-name ${{ env.ENV_NAME }}-ecs-taskdefinition \
             --query "Stacks[0].Outputs[?OutputKey=='TaskDefinitionId'].OutputValue" \
             --output text)
+      
  
             echo "task_definition_id=$TASK_DEFINITION_ID" >> $GITHUB_OUTPUT  
 
@@ -624,7 +635,7 @@ jobs:
               AppLoadBalancerTargetGroupId=${{ needs.deploy_alb.outputs.alb_target_group }} \
               PrivateSubnetId1=${{ needs.deploy_network.outputs.private_subnet1 }} \
               PrivateSubnetId2=${{ needs.deploy_network.outputs.private_subnet2 }} \
-              SecurityGroupEcsId=${{ needs.deploy_sg.outputs.sg_ecs_id }}
+              SecurityGroupEcsId=${{ needs.deploy_sg.outputs.sg_ecs_id }} \
               $PARAMS
 
          
