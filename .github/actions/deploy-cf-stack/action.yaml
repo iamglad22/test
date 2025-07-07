@@ -49,23 +49,43 @@ runs:
               --stack-name "${{ inputs.stack-name }}" \
               --query 'Stacks[0].Outputs' \
               --output json)
-        echo "outputs-json=$OUT" >> $GITHUB_OUTPUT
 
-        if [[ -n "${{ inputs.output-keys }}" ]]; then
-          echo "Extracting outputs: ${{ inputs.output-keys }}"
-          IFS=',' read -ra KEYS <<< "${{ inputs.output-keys }}"
-          for KEY in "${KEYS[@]}"; do
+        echo "Extracting outputs: S3RegionalDomainName,S3Arn,S3BucketId"
+
+        # Define output keys
+        IFS=',' read -ra KEYS <<< "S3RegionalDomainName,S3Arn,S3BucketId"
+
+        # Loop through keys and extract values
+        for KEY in "${KEYS[@]}"; do
+          CLEAN_KEY=$(echo "$KEY" | xargs)
+          VALUE=$(echo "$OUT" | jq -r ".[] | select(.OutputKey==\"$CLEAN_KEY\") | .OutputValue")
+
+          if [[ -n "$VALUE" && "$VALUE" != "null" ]]; then
+            echo "$CLEAN_KEY=$VALUE" >> "$GITHUB_OUTPUT"
+          else
+            echo "⚠️ Warning: OutputKey '$CLEAN_KEY' not found in stack outputs." >&2
+          fi
+        done
+
+
+
+      #  echo "outputs-json=$OUT" >> $GITHUB_OUTPUT
+
+      #  if [[ -n "${{ inputs.output-keys }}" ]]; then
+      #    echo "Extracting outputs: ${{ inputs.output-keys }}"
+      #    IFS=',' read -ra KEYS <<< "${{ inputs.output-keys }}"
+      #    for KEY in "${KEYS[@]}"; do
                 
-            KEY=$(echo "$KEY" | xargs)      
-            VALUE=$(echo "$OUTPUT_JSON" | jq -r ".[] | select(.OutputKey==\"$KEY\") | .OutputValue")
+      #      KEY=$(echo "$KEY" | xargs)      
+      #      VALUE=$(echo "$OUT" | jq -r ".[] | select(.OutputKey==\"$KEY\") | .OutputValue")
 
-            if [[ -n "$VALUE" && "$VALUE" != "null" ]]; then
-              echo "$KEY=$VALUE" >> $GITHUB_OUTPUT
-            else
-              echo "⚠️ Warning: OutputKey '$KEY' not found in stack outputs." >&2
-            fi
-          done
-        fi
+      #      if [[ -n "$VALUE" && "$VALUE" != "null" ]]; then
+      #        echo "$KEY=$VALUE" >> $GITHUB_OUTPUT
+      #      else
+      #        echo "⚠️ Warning: OutputKey '$KEY' not found in stack outputs." >&2
+      #      fi
+      #    done
+      #  fi
       #      echo "$KEY=$VALUE" >> $GITHUB_OUTPUT
       #    done
       #  fi
