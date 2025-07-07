@@ -10,20 +10,6 @@ env:
   #STACK_NAME: infrastructure-stack
   ENV_NAME: dev
   PARAMS_FILE: aws-cloudformation/parameters/dev.json
-  #InfraCode: mcfleetx
-  VPC_TEMPLATE: aws-cloudformation/templates/aws-networking.yaml
-  SG_TEMPLATE: aws-cloudformation/templates/aws-sg.yaml
-  ALB_TEMPLATE: aws-cloudformation/templates/aws-ecs-loadbalancer.yaml
-  APIG_TEMPLATE: aws-cloudformation/templates/aws-apigateway.yaml
-  S3_TEMPLATE: aws-cloudformation/templates/aws-s3-cf.yaml
-  CF_TEMPLATE: aws-cloudformation/templates/aws-cloudfront.yaml
-  S3_POLICY_TEMPLATE: aws-cloudformation/templates/aws-s3-policy.yaml
-  ECR_TEMPLATE: aws-cloudformation/templates/aws-ecr.yaml
-  LOG_GROUP_TEMPLATE: aws-cloudformation/templates/aws-ecs-loggroup.yaml
-  ECS_ROLE_TEMPLATE: aws-cloudformation/templates/aws-ecs-role.yaml
-  ECS_CLUSTER_TEMPLATE: aws-cloudformation/templates/aws-ecs-cluster.yaml
-  ECS_SERVICE_TEMPLATE: aws-cloudformation/templates/aws-ecs-service.yaml
-  ECS_TD_TEMPLATE: aws-cloudformation/templates/aws-ecs-taskdefinition.yaml
   
 
 jobs:
@@ -34,6 +20,13 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
+      #- name: Install yq dependencies
+      #  run: |
+      #    # Install yq
+      #    sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+      #    sudo chmod +x /usr/local/bin/yq
+      #    yq --version
+
       - name: Install cfn-lint dependencies
         run: |
           # Install cfn-lint
@@ -41,7 +34,18 @@ jobs:
           pip3 install cfn-lint
           cfn-lint --version
 
+      #- name: Configure AWS Credentials
+      #  uses: /.github/actions/aws-config
+      #  with:
+      #    aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #    aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #    aws-region: ${{ env.AWS_REGION }}
+
       - name: Lint CloudFormation templates
+        #env:
+        #  PARAMETER_FILE: ${{ env.PARAMS_FILE }}
+        #run: cfn-lint -t aws-cloudformation/templates/*.yaml 
+        #--parameters ${{ env.PARAMS_FILE }}
         run: |
           for template in aws-cloudformation/templates/*.yaml; do
             echo "Linting $template"
@@ -49,12 +53,27 @@ jobs:
           done
           
 
+        #  cfn-lint aws-cloudformation/templates/*.yaml \
+        #    --template-parameters $PARAMETER_FILE
 
+        #  find aws-cloudformation/templates -type f \( -name "*.yaml" -o -name "*.yml" -o -name "*.json" \) -not -path "aws-cloudformation/parameters/*" | while read file; do
+        #    echo "Linting $file"
+        #    cfn-lint --parameters file://$PARAMETER_FILE -t "$file" || exit 1
+        #  done
+
+    #  - name: Validate main template
+    #    run: |
+    #      aws cloudformation validate-template \
+    #        --template-body file://aws-cloudformation/templates/main.yaml
   deploy_network:
     runs-on: ubuntu-latest
     needs: validate_files
-    #outputs:
-    #  network_outputs: ${{ steps.network.outputs.outputs-json }}
+    outputs:
+      vpc_name: ${{ steps.network_output.outputs.vpc_name }}
+      public_subnet1: ${{ steps.network_output.outputs.public_subnet1 }}
+      public_subnet2: ${{ steps.network_output.outputs.public_subnet2 }}
+      private_subnet1: ${{ steps.network_output.outputs.private_subnet1 }}
+      private_subnet2: ${{ steps.network_output.outputs.private_subnet2 }}
 
     steps:
       - name: Checkout Code
@@ -62,17 +81,58 @@ jobs:
       - name: Configure AWS Credentials
         uses: /.github/actions/aws-config
         with:
+          #role-to-assume: 
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
       - name: Deploy CloudFormation Stack - Networking
-        id: network
-        uses: ./.github/actions/deploy-cf-stack
-        with:
-          stack-name: ${{ env.ENV_NAME }}-network
-          template-file: ${{ env.VPC_TEMPLATE }}
-          params-file: ${{ env.PARAMS_FILE }}
-          output-keys: VPCId,PublicSubnetId1,PublicSubnetId2,PrivateSubnetId1,PrivateSubnetId2
+        run: |
+          PARAMS=$(jq -r '.[] | "\(.ParameterKey)=\(.ParameterValue)"' ${{ env.PARAMS_FILE }})
+          aws cloudformation deploy \
+            --template-file aws-cloudformation/templates/aws-networking.yaml \
+            --stack-name ${{ env.ENV_NAME }}-network \
+            --parameter-overrides $PARAMS
+        #    --parameter-overrides $(yq eval '. as $parameter | keys[] | "\(. + "=" + $parameter[.])"' ${{ env.PARAMS_FILE }})
+        #  --capabilities CAPABILITY_NAMED_IAM
+      #  uses: ./.github/actions
+      #  with:
+      #    stack-name: dev-infrastucture
+      #    template-file: cloudformation/templates/app.yaml
+      #   parameter-file: cloudformation/parameters/dev.yaml
+        #run: |
+        #  aws cloudformation deploy \
+        #    --template-file cloudformation/main.yaml \
+        #    --stack-name github-cfn-stack \
+        #    --capabilities CAPABILITY_NAMED_IAM
+      - name: Get Network Outputs
+        id: network_output
+        run: |
+          VPC_NAME=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.ENV_NAME }}-network \
+            --query "Stacks[0].Outputs[?OutputKey=='VPCId'].OutputValue" \
+            --output text)
+          PUBLIC_SUBNET1=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.ENV_NAME }}-network \
+            --query "Stacks[0].Outputs[?OutputKey=='PublicSubnetId1'].OutputValue" \
+            --output text)
+          PUBLIC_SUBNET2=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.ENV_NAME }}-network \
+            --query "Stacks[0].Outputs[?OutputKey=='PublicSubnetId2'].OutputValue" \
+            --output text)
+          PRIVATE_SUBNET1=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.ENV_NAME }}-network \
+            --query "Stacks[0].Outputs[?OutputKey=='PrivateSubnetId1'].OutputValue" \
+            --output text)
+          PRIVATE_SUBNET1=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.ENV_NAME }}-network \
+            --query "Stacks[0].Outputs[?OutputKey=='PrivateSubnetId1'].OutputValue" \
+            --output text)
+          
+          echo "vpc_name=$VPC_NAME" >> $GITHUB_OUTPUT
+          echo "public_subnet1=$PUBLIC_SUBNET1" >> $GITHUB_OUTPUT
+          echo "public_subnet2=$PUBLIC_SUBNET2" >> $GITHUB_OUTPUT
+          echo "private_subnet1=$PRIVATE_SUBNET1" >> $GITHUB_OUTPUT
+          echo "private_subnet2=$PRIVATE_SUBNET2" >> $GITHUB_OUTPUT
 
   deploy_sg:
     runs-on: ubuntu-latest
@@ -90,16 +150,16 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}      
       - name: Deploy CloudFormation Stack - Security Group
-        id: security_group
-        uses: ./.github/actions/deploy-cf-stack
-        with:
-          stack-name: ${{ env.ENV_NAME }}-security-group
-          template-file: ${{ env.SG_TEMPLATE }}
-          params-file: ${{ env.PARAMS_FILE }}
-          extra-params: |
-            VPCId=${{ needs.deploy_network.outputs.network_outputs }}
-        #  parameters: >-
-        #    VPCId=$(echo '${{ needs.deploy_network.outputs.network_outputs }}' | jq -r '.[]|select(.OutputKey=="VPCId").OutputValue')
+        env:
+          VPC_ID: ${{ needs.deploy_network.outputs.vpc_name }}
+        run: |
+          PARAMS=$(jq -r '.[] | "\(.ParameterKey)=\(.ParameterValue)"' ${{ env.PARAMS_FILE }})
+          aws cloudformation deploy \
+            --template-file aws-cloudformation/templates/aws-sg.yaml \
+            --stack-name ${{ env.ENV_NAME }}-security-group \
+            --parameter-overrides \
+              VPCId=$VPC_ID \
+              $PARAMS
       
       - name: Get Security Group Outputs
         id: security_group_output
@@ -226,14 +286,34 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
       - name: Deploy CloudFormation Stack - S3 Bucket
-        id: storage
-        uses: ./.github/actions/deploy-cf-stack
-        with:
-          stack-name: ${{ env.ENV_NAME }}-network
-          template-file: aws-cloudformation/templates/aws-networking.yaml
-          params-file: ${{ env.PARAMS_FILE }}
-          output-keys: S3RegionalDomainName,S3Arn,S3BucketId
+        run: |
+          PARAMS=$(jq -r '.[] | "\(.ParameterKey)=\(.ParameterValue)"' ${{ env.PARAMS_FILE }})
+          aws cloudformation deploy \
+            --template-file aws-cloudformation/templates/aws-s3-cf.yaml \
+            --stack-name ${{ env.ENV_NAME }}-s3 \
+            --parameter-overrides $PARAMS
+        #    --parameter-overrides file://$PARAMS_FILE
 
+      
+      - name: Get S3 Bucket Outputs
+        id: s3_output
+        run: |
+          S3_REGIONAL_DOMAIN_NAME=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.ENV_NAME }}-s3 \
+            --query "Stacks[0].Outputs[?OutputKey=='S3RegionalDomainName'].OutputValue" \
+            --output text)
+          S3_ARN=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.ENV_NAME }}-s3 \
+            --query "Stacks[0].Outputs[?OutputKey=='S3Arn'].OutputValue" \
+            --output text)
+          S3_ID=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.ENV_NAME }}-s3 \
+            --query "Stacks[0].Outputs[?OutputKey=='S3BucketId'].OutputValue" \
+            --output text)
+                    
+            echo "s3_regional_domain_name=$S3_REGIONAL_DOMAIN_NAME" >> $GITHUB_OUTPUT            
+            echo "s3_arn=$S3_ARN" >> $GITHUB_OUTPUT 
+            echo "s3_id=$S3_ID" >> $GITHUB_OUTPUT 
 
   deploy_cloudfront:
     runs-on: ubuntu-latest

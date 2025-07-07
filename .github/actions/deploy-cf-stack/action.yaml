@@ -1,0 +1,77 @@
+name: Deploy Cloud Formation Stack
+description: Deploy a CloudFormation template and output values
+
+inputs:
+  stack-name:
+    required: true
+  template-file:
+    required: true
+  params-file: # pass as key1=value1 key2=value2...
+    required: false
+  extra-params:
+    required: false
+    description: 'Additional parameters to override (space-separated Key=Value)'
+  #param-list:
+  #  required: false
+  output-keys:
+    required: false
+    description: 'Comma-separated list of OutputKeys to extract from the stack'
+# Define outputs dynamically by parsing post-deployment as needed
+outputs:
+  outputs-json:
+    description: JSON of outputs
+
+runs:
+  using: composite
+  steps:
+    - name: Deploy CFN stack
+      shell: bash
+      run: |
+        echo "Deploying ${{ inputs.stack-name }}"
+        PARAMS_LIST=$(jq -r '.[] | "\(.ParameterKey)=\(.ParameterValue)"' ${{ inputs.params-file }})
+    #    PARAMS="--parameter-overrides file://${{ inputs.parameter-file }}"
+    #    PARAMS="--parameter-overrides $PARAMS_LIST"
+        PARAMS=$(jq -r '.[] | "\(.ParameterKey)=\(.ParameterValue)"' ${{ inputs.params-file }})
+        if [[ -n "${{ inputs.extra-params }}" ]]; then
+          PARAMS="$PARAMS ${{ inputs.extra-params }}"
+        fi
+
+
+    #    PARAMS=$(jq -r '.[] | "\(.ParameterKey)=\(.ParameterValue)"' ${{ inputs.params-file }})
+        aws cloudformation deploy \
+          --stack-name "${{ inputs.stack-name }}" \
+          --template-file "${{ inputs.template-file }}" \
+      #    ${ inputs.parameters && echo "--parameter-overrides ${{ inputs.parameters }}" }
+          --parameter-overrides $PARAMS
+      ##    --parameter-overrides "${{ inputs.param-list }}" \
+          --capabilities CAPABILITY_NAMED_IAM
+    #  shell: bash
+
+    - name: Fetch Outputs JSON
+      id: get_outputs
+      shell: bash
+      run: |
+        OUT=$(aws cloudformation describe-stacks \
+              --stack-name "${{ inputs.stack-name }}" \
+              --query 'Stacks[0].Outputs' \
+              --output json)
+        echo "outputs-json=$OUT" >> $GITHUB_OUTPUT
+
+        if [[ -n "${{ inputs.output-keys }}" ]]; then
+          echo "Extracting outputs: ${{ inputs.output-keys }}"
+          IFS=',' read -ra KEYS <<< "${{ inputs.output-keys }}"
+          for KEY in "${KEYS[@]}"; do
+      #Trim whitespace
+            KEY=$(echo "$KEY" | xargs)      
+            VALUE=$(echo "$OUTPUT_JSON" | jq -r ".[] | select(.OutputKey==\"$KEY\") | .OutputValue")
+
+            if [[ -n "$VALUE" && "$VALUE" != "null" ]]; then
+              echo "$KEY=$VALUE" >> $GITHUB_OUTPUT
+            else
+              echo "⚠️ Warning: OutputKey '$KEY' not found in stack outputs." >&2
+            fi
+          done
+        fi
+      #      echo "$KEY=$VALUE" >> $GITHUB_OUTPUT
+      #    done
+      #  fi
