@@ -62,7 +62,7 @@ runs:
             if [[ -n "$VALUE" && "$VALUE" != "null" ]]; then
               echo "$KEY=$VALUE" >> $GITHUB_OUTPUT
             else
-          #    echo "⚠️ Warning: OutputKey '$KEY' not found in stack outputs." >&2
+              echo "⚠️ Warning: OutputKey '$KEY' not found in stack outputs." >&2
             fi
           done
         fi
