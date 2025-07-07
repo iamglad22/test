@@ -97,24 +97,11 @@ jobs:
           template-file: ${{ env.SG_TEMPLATE }}
           params-file: ${{ env.PARAMS_FILE }}
           extra-params: |
-            VPCId=${{ needs.deploy_network.outputs.network_outputs }}
+            VPCId=${{ needs.deploy_network.outputs.VPCId }}
+          output-keys: SecurityGroupEcsId,SecurityGroupAlbId
         #  parameters: >-
         #    VPCId=$(echo '${{ needs.deploy_network.outputs.network_outputs }}' | jq -r '.[]|select(.OutputKey=="VPCId").OutputValue')
       
-      - name: Get Security Group Outputs
-        id: security_group_output
-        run: |
-          SG_ECS_ID=$(aws cloudformation describe-stacks \
-            --stack-name ${{ env.ENV_NAME }}-security-group \
-            --query "Stacks[0].Outputs[?OutputKey=='SecurityGroupEcsId'].OutputValue" \
-            --output text)
-          SG_ALB_ID=$(aws cloudformation describe-stacks \
-            --stack-name ${{ env.ENV_NAME }}-network \
-            --query "Stacks[0].Outputs[?OutputKey=='SecurityGroupAlbId'].OutputValue" \
-            --output text)
-                    
-            echo "sg_ecs_id=$SG_ECS_ID" >> $GITHUB_OUTPUT
-            echo "sg_alb_id=$SG_ALB_ID" >> $GITHUB_OUTPUT
       
   deploy_alb:
     runs-on: ubuntu-latest

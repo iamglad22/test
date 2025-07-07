@@ -28,7 +28,7 @@ runs:
       shell: bash
       run: |
         echo "Deploying ${{ inputs.stack-name }}"
-        PARAMS_LIST=$(jq -r '.[] | "\(.ParameterKey)=\(.ParameterValue)"' ${{ inputs.params-file }})
+    #    PARAMS_LIST=$(jq -r '.[] | "\(.ParameterKey)=\(.ParameterValue)"' ${{ inputs.params-file }})
     #    PARAMS="--parameter-overrides file://${{ inputs.parameter-file }}"
     #    PARAMS="--parameter-overrides $PARAMS_LIST"
         PARAMS=$(jq -r '.[] | "\(.ParameterKey)=\(.ParameterValue)"' ${{ inputs.params-file }})
