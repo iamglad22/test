@@ -12,7 +12,7 @@ Parameters:
   ECSLogGroupRetention:
     Type: Number
 
-  ENV_NAME:
+  EnvName:
     Type: String
 Resources:
   # =====================
@@ -22,7 +22,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       #LogGroupName: !Ref ECSLogGroupName
-      LogGroupName: !Sub "${InfraCode}/${ENV_NAME}/${ServiceName}-log"
+      LogGroupName: !Sub "${InfraCode}/${EnvName}/${ServiceName}-log"
       RetentionInDays: !Ref ECSLogGroupRetention
 
 Outputs:

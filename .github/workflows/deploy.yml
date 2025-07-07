@@ -42,14 +42,15 @@ jobs:
       #    aws-region: ${{ env.AWS_REGION }}
 
       - name: Lint CloudFormation templates
-        env:
-          PARAMETER_FILE: ${{ env.PARAMS_FILE }}
-        #run: cfn-lint -t aws-cloudformation/**/*.yaml --parameters ${{ env.PARAMS_FILE }}
-        run: |
-          for template in aws-cloudformation/templates/*.yaml; do
-            echo "Linting $template"
-            cfn-lint "$template" --parameters file://$PARAMETER_FILE
-          done
+        #env:
+        #  PARAMETER_FILE: ${{ env.PARAMS_FILE }}
+        run: cfn-lint -t aws-cloudformation/templates/*.yaml 
+        #--parameters ${{ env.PARAMS_FILE }}
+        #run: |
+        #  for template in aws-cloudformation/templates/*.yaml; do
+        #    echo "Linting $template"
+        #    cfn-lint "$template" --parameters file://$PARAMETER_FILE
+        #  done
 
         #  cfn-lint aws-cloudformation/templates/*.yaml \
         #    --template-parameters $PARAMETER_FILE
@@ -485,13 +486,15 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
       - name: Deploy CloudFormation Stack - ECS Log Group
+        env:
+          ENV_NAME: ${{ env.ENV_NAME }}
         run: |
           PARAMS=$(jq -r '.[] | "\(.ParameterKey)=\(.ParameterValue)"' ${{ env.PARAMS_FILE }})
           aws cloudformation deploy \
             --template-file aws-cloudformation/templates/aws-ecs-loggroup.yaml \
             --stack-name ${{ env.ENV_NAME }}-ecs-loggroup \
             --parameter-overrides \
-              ENV_NAME=${{ env.ENV_NAME }} \
+              EnvName=$ENV_NAME \
               ServiceName=${{ needs.deploy_api-gateway.outputs.api_gateway_domain_name }} \
               $PARAMS
 
@@ -528,13 +531,15 @@ jobs:
             echo "ecs_role_arn=$ECS_ROLE_ARN" >> $GITHUB_OUTPUT
 
       - name: Deploy CloudFormation Stack - ECS Cluster
+        env:
+          ENV_NAME: ${{ env.ENV_NAME }}
         run: |
           PARAMS=$(jq -r '.[] | "\(.ParameterKey)=\(.ParameterValue)"' ${{ env.PARAMS_FILE }})
           aws cloudformation deploy \
             --template-file aws-cloudformation/templates/aws-ecs-cluster.yaml \
             --stack-name ${{ env.ENV_NAME }}-ecs-cluster \
             --parameter-overrides \
-              ENV_NAME=${{ env.ENV_NAME }}
+              EnvName=$ENV_NAME
               $PARAMS
 
       

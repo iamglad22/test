@@ -3,7 +3,7 @@ Description: IFM CloudFormation - Cluster
 Parameters:
   InfraCode:
     Type: String
-  ENV_NAME:
+  EnvName:
     Type: String
 #  ClusterName:
 #    Type: String
@@ -16,7 +16,7 @@ Resources:
     Type: AWS::ECS::Cluster
     Properties:
       #ClusterName: !Ref ClusterName
-      ClusterName: !Sub "${InfraCode}-${ENV_NAME}"
+      ClusterName: !Sub "${InfraCode}-${EnvName}"
 
 Outputs:
   ECSClusterId:
