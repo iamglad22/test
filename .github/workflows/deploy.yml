@@ -51,7 +51,7 @@ jobs:
             echo "Linting $template"
             cfn-lint -t "$template" 
           done
-          for template in .github/actions/aws-config/*.yaml; do
+          for template in .github/actions/aws-config/*.yml; do
             echo "Linting $template"
             cfn-lint -t "$template" 
           done
