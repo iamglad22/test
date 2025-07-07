@@ -9,9 +9,6 @@ inputs:
   aws-secret-access-key:
     required: true
 
-outputs:
-  account-id:
-
 runs:
   using: composite
   steps:

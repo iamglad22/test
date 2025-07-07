@@ -51,6 +51,10 @@ jobs:
             echo "Linting $template"
             cfn-lint -t "$template" 
           done
+          for template in .github/actions/aws-config/*.yaml; do
+            echo "Linting $template"
+            cfn-lint -t "$template" 
+          done
 
         #  cfn-lint aws-cloudformation/templates/*.yaml \
         #    --template-parameters $PARAMETER_FILE
