@@ -353,7 +353,6 @@ jobs:
       - name: Deploy CloudFormation Stack - ECS Log Group
         env:
           ENV_NAME: ${{ env.ENV_NAME }}
-
         id: ecs-loggroup
         uses: ./.github/actions/deploy-cf-stack
         with:
@@ -416,7 +415,7 @@ jobs:
           stack-name: ${{ env.ENV_NAME }}-ecs-taskdefinition
           template-file: ${{ env.ECS_TD_TEMPLATE }}
           params-file: ${{ env.PARAMS_FILE }}
-		  extra-params: |
+		      extra-params: |
             LogGroupId=${{ needs.deploy_ecs-req.outputs.loggroup_id }}
             EcsRoleArn=${{ needs.deploy_ecs-req.outputs.ecs_role_arn }}
             ContainerImage=${{ needs.deploy_ecr_docker_image.outputs.image_uri }}
@@ -431,12 +430,12 @@ jobs:
           template-file: ${{ env.ECS_SERVICE_TEMPLATE }}
           params-file: ${{ env.PARAMS_FILE }}
 		      extra-params: |
-            ECSClusterId=${{ needs.deploy_ecs-req.outputs.ecs_cluster_id }} \
-            TaskDefinitionId=${{ steps.ecs_taskdefinition_output.outputs.task_definition_id }} \
-            AppLoadBalancerTargetGroupId=${{ needs.deploy_alb.outputs.alb_target_group }} \
-            PrivateSubnetId1=${{ needs.deploy_network.outputs.private_subnet1 }} \
-            PrivateSubnetId2=${{ needs.deploy_network.outputs.private_subnet2 }} \
-            SecurityGroupEcsId=${{ needs.deploy_sg.outputs.sg_ecs_id }} \
+            ECSClusterId=${{ needs.deploy_ecs-req.outputs.ecs_cluster_id }}
+            TaskDefinitionId=${{ steps.ecs_taskdefinition_output.outputs.task_definition_id }}
+            AppLoadBalancerTargetGroupId=${{ needs.deploy_alb.outputs.alb_target_group }}
+            PrivateSubnetId1=${{ needs.deploy_network.outputs.private_subnet1 }}
+            PrivateSubnetId2=${{ needs.deploy_network.outputs.private_subnet2 }}
+            SecurityGroupEcsId=${{ needs.deploy_sg.outputs.sg_ecs_id }}
 
 
 
