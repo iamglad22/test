@@ -19,6 +19,6 @@ Resources:
         ScanOnPush: true
 
 Outputs:
-  EcrRepoName:
+  EcrRepositoryName:
     Value: !Ref EcrRepository
     Description: ECR Repository Name

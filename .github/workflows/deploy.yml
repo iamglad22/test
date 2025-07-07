@@ -46,10 +46,13 @@ jobs:
           PARAMETER_FILE: aws-cloudformation/parameters/dev.json
         #run: cfn-lint -t aws-cloudformation/**/*.yaml --parameters ${{ env.PARAMS_FILE }}
         run: |
-          find aws-cloudformation/templates -type f \( -name "*.yaml" -o -name "*.yml" -o -name "*.json" \) -not -path "aws-cloudformation/parameters/*" | while read file; do
-            echo "Linting $file"
-            cfn-lint --parameters file://$PARAMETER_FILE -t "$file" || exit 1
-          done
+          cfn-lint aws-cloudformation/templates/*.yaml \
+            --template-parameters $PARAMETER_FILE
+
+        #  find aws-cloudformation/templates -type f \( -name "*.yaml" -o -name "*.yml" -o -name "*.json" \) -not -path "aws-cloudformation/parameters/*" | while read file; do
+        #    echo "Linting $file"
+        #    cfn-lint --parameters file://$PARAMETER_FILE -t "$file" || exit 1
+        #  done
 
     #  - name: Validate main template
     #    run: |
@@ -155,11 +158,11 @@ jobs:
         run: |
           SG_ECS_ID=$(aws cloudformation describe-stacks \
             --stack-name ${{ env.ENV_NAME }}-security-group \
-            --query "Stacks[0].Outputs[?OutputKey=='SgEcsId'].OutputValue" \
+            --query "Stacks[0].Outputs[?OutputKey=='SecurityGroupEcsId'].OutputValue" \
             --output text)
           SG_ALB_ID=$(aws cloudformation describe-stacks \
             --stack-name ${{ env.ENV_NAME }}-network \
-            --query "Stacks[0].Outputs[?OutputKey=='SgAlbId'].OutputValue" \
+            --query "Stacks[0].Outputs[?OutputKey=='SecurityGroupAlbId'].OutputValue" \
             --output text)
                     
             echo "sg_ecs_id=$SG_ECS_ID" >> $GITHUB_OUTPUT
@@ -190,7 +193,7 @@ jobs:
               VPCId=${{ needs.deploy_network.outputs.vpc_name }} \
               PublicSubnetId1=${{ needs.deploy_network.outputs.public_subnet1 }} \
               PublicSubnetId2=${{ needs.deploy_network.outputs.public_subnet2 }} \
-              SgAlbId=${{ needs.deploy_sg.outputs.sg_alb_id }} \
+              SecurityGroupAlbId=${{ needs.deploy_sg.outputs.sg_alb_id }} \
               $PARAMS
       
       - name: Get Application Load Balancer Outputs
@@ -198,11 +201,11 @@ jobs:
         run: |
           ALB_DNS_NAME=$(aws cloudformation describe-stacks \
             --stack-name ${{ env.ENV_NAME }}-alb \
-            --query "Stacks[0].Outputs[?OutputKey=='AlbDnsName'].OutputValue" \
+            --query "Stacks[0].Outputs[?OutputKey=='AppLoadBalancerDnsName'].OutputValue" \
             --output text)
           ALB_TARGET_GROUP=$(aws cloudformation describe-stacks \
             --stack-name ${{ env.ENV_NAME }}-alb \
-            --query "Stacks[0].Outputs[?OutputKey=='AlbTgId'].OutputValue" \
+            --query "Stacks[0].Outputs[?OutputKey=='AppLoadBalancerTargetGroupId'].OutputValue" \
             --output text)
             
                     
@@ -233,7 +236,7 @@ jobs:
             --template-file aws-cloudformation/templates/aws-apigateway.yaml \
             --stack-name ${{ env.ENV_NAME }}-api-gateway \
             --parameter-overrides \
-              AlbDnsName=${{ needs.deploy_alb.outputs.alb_dns_name }} \
+              AppLoadBalancerDnsName=${{ needs.deploy_alb.outputs.alb_dns_name }} \
               $PARAMS
 
 
@@ -401,7 +404,7 @@ jobs:
         run: |
           ECR_REPOSITORY_NAME=$(aws cloudformation describe-stacks \
             --stack-name ${{ env.ENV_NAME }}-ecs-ecr \
-            --query "Stacks[0].Outputs[?OutputKey=='EcrRepoName'].OutputValue" \
+            --query "Stacks[0].Outputs[?OutputKey=='EcrRepositoryName'].OutputValue" \
             --output text)
  
             echo "ecr_repository_name=$ECR_REPOSITORY_NAME" >> $GITHUB_OUTPUT
@@ -555,7 +558,7 @@ jobs:
     #    run: |
     #      ECR_REPOSITORY_NAME=$(aws cloudformation describe-stacks \
     #        --stack-name ${{ env.ENV_NAME }}-ecs_ecr \
-    #        --query "Stacks[0].Outputs[?OutputKey=='EcrRepoName'].OutputValue" \
+    #        --query "Stacks[0].Outputs[?OutputKey=='EcrRepositoryName'].OutputValue" \
     #        --output text)
  
     #        echo "ecr_repository_name=$ECR_REPOSITORY_NAME" >> $GITHUB_OUTPUT
@@ -606,10 +609,10 @@ jobs:
             --parameter-overrides \
               ECSClusterId=${{ needs.deploy_ecs-req.outputs.ecs_cluster_id }} \
               TaskDefinitionId=${{ steps.ecs_taskdefinition_output.outputs.task_definition_id }} \
-              AlbTgId=${{ needs.deploy_alb.outputs.alb_target_group }} \
+              AppLoadBalancerTargetGroupId=${{ needs.deploy_alb.outputs.alb_target_group }} \
               PrivateSubnetId1=${{ needs.deploy_network.outputs.private_subnet1 }} \
               PrivateSubnetId2=${{ needs.deploy_network.outputs.private_subnet2 }} \
-              SgEcsId=${{ needs.deploy_sg.outputs.sg_ecs_id }}
+              SecurityGroupEcsId=${{ needs.deploy_sg.outputs.sg_ecs_id }}
               $PARAMS
 
          

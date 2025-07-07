@@ -6,6 +6,8 @@ Parameters:
 #  ECSLogGroupName:
 #    Type: String
 #    Description: Log group name of ECS container
+  ServiceName:
+    Type: String
 
   ECSLogGroupRetention:
     Type: Number

@@ -1,10 +1,16 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: IFM CloudFormation - S3
-#Parameters:
+Parameters:
 #  InfraCode:
 #    Type: String
 #  S3Bucketname:
 #    Type: String
+  S3BucketId:
+    Type: String
+  S3Arn:
+    Type: String
+  CloudFrontId:
+    Type: String
 
 Resources:
   # ========================================

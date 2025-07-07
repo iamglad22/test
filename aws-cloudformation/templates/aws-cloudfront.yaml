@@ -8,6 +8,10 @@ Parameters:
 
   CloudFrontOriginPath:
     Type: String
+  ApiGatewayDomainName:
+    Type: String
+  S3RegionalDomainName:
+    Type: String
 
 Resources:
   # ========================================

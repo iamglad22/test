@@ -6,6 +6,8 @@ Parameters:
 #  APIGatewayName:
 #    Type: String
 #    Description: API Gateway Name
+  AppLoadBalancerDnsName:
+    Type: String
     
   StageName:
     Type: String
@@ -42,7 +44,7 @@ Resources:
       #IntegrationUri: !Sub
       #  - http://${albDnsName}
       #  - albDnsName: !GetAtt ALB.DNSName
-      IntegrationUri: !Sub "http://${AlbDnsName}"
+      IntegrationUri: !Sub "http://${AppLoadBalancerDnsName}"
       PayloadFormatVersion: '1.0'
 
   ApiGatewayRoute:

@@ -24,9 +24,15 @@ Parameters:
     Type: String
     Description: Name of the ECS Task Definition Family
 
+  LogGroupId:
+    Type: String
+
   ECSLogStreamPrefix:
     Type: String
-    Description: AWS log stream prefix for TAsk definition	
+    Description: AWS log stream prefix for TAsk definition
+
+  EcsRoleArn:
+    Type: String
 Resources:
   # =====================
   # ECS Task Definitions

@@ -10,6 +10,15 @@ Parameters:
   ContainerPort:
     Type: Number
     Description: The port the container will listen on
+  SecurityGroupAlbId:
+    Type: String
+  PublicSubnetId1:
+    Type: String
+  PublicSubnetId2:
+    Type: String  
+  VPCId:
+    Type: String
+
 Resources:
   # ========================================
   # Load Balancer & Target Group
@@ -27,7 +36,7 @@ Resources:
         - !Ref PublicSubnetId2
       
       SecurityGroups:
-        - !Ref SgAlbId
+        - !Ref SecurityGroupAlbId
 
   ALBTG:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
@@ -58,9 +67,9 @@ Resources:
           TargetGroupArn: !Ref ALBTG
 
 Outputs:
-  AlbDnsName:
+  AppLoadBalancerDnsName:
     Value: !GetAtt ALB.DNSName
     Description: Application Load Balancer DNS Name
-  AlbTgId:
+  AppLoadBalancerTargetGroupId:
     Value: !Ref ALBTG
     Description: Application Load Balancer Target Group

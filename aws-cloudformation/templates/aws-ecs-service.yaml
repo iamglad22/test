@@ -3,6 +3,8 @@ Description: IFM CloudFormation - ECS Service
 Parameters:
   InfraCode:
     Type: String
+  AppLoadBalancerTargetGroupId:
+    Type: String
 #  ServiceName:
 #    Type: String
 #    Description: ECS Service Name
@@ -11,12 +13,22 @@ Parameters:
     Type: Number
     Description: The port the container will listen on
 
+  ECSClusterId:
+    Type: String
+  TaskDefinitionId:
+    Type: String
   ECSContainerName:
     Type: String
     Description: Name of the ECS container
 
   ECSServiceDesiredCount:
     Type: Number
+  PrivateSubnetId1:
+    Type: String
+  PrivateSubnetId2:
+    Type: String
+  SecurityGroupEcsId:
+    Type: String
 Resources:
   # ========================================
   # ECS Service
@@ -35,7 +47,7 @@ Resources:
       #TaskDefinition: !Ref ECSTaskDefinition
       TaskDefinition: !Ref TaskDefinitionId
       LoadBalancers:
-        - TargetGroupArn: !Ref 
+        - TargetGroupArn: !Ref AppLoadBalancerTargetGroupId
           #TargetGroupArn: !Ref ALBTG
           ContainerName: !Ref ECSContainerName
           ContainerPort: !Ref ContainerPort
@@ -49,5 +61,5 @@ Resources:
             - !Ref PrivateSubnetId2
           SecurityGroups:
           #  - !Ref SecurityGroupECS
-            - !Ref SgEcsId
+            - !Ref SecurityGroupEcsId
           AssignPublicIp: DISABLED
