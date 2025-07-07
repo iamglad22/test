@@ -6,6 +6,9 @@ Parameters:
   ContainerPort:
     Type: Number
     Description: The port the container will listen on
+  VPCId:
+    Type: String
+    Description: VPC Name of Resource
 
 #  SecurityGroupECSName:
 #    Type: String
@@ -47,10 +50,10 @@ Resources:
         #  Value: !Ref SecurityGroupALBName
 
 Outputs:
-  SgEcsId:
+  SecurityGroupEcsId:
     Value: !Ref SecurityGroupECS
     Description: SG for ECS
 
-  SgAlbId:
+  SecurityGroupAlbId:
     Value: !Ref SecurityGroupALB
     Description: SG for ALB
