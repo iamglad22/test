@@ -517,7 +517,8 @@ jobs:
           aws cloudformation deploy \
             --template-file aws-cloudformation/templates/aws-ecs-role.yaml \
             --stack-name ${{ env.ENV_NAME }}-ecs-role \
-            --parameter-overrides $PARAMS
+            --parameter-overrides $PARAMS \
+            --capabilities CAPABILITY_NAMED_IAM
 
 
       
