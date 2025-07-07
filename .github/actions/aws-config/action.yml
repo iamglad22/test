@@ -4,10 +4,13 @@ description: "Configure AWS credentials"
 inputs:
   aws-region:
     required: true
+    description: AWS Region
   aws-access-key-id:
     required: true
+    description: AWS Account Access Key
   aws-secret-access-key:
     required: true
+    description: AWS Account Secret Key
 
 
 runs:
