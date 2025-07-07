@@ -18,6 +18,8 @@ Resources:
       ImageScanningConfiguration:
         ScanOnPush: true
 
+
+
 Outputs:
   EcrRepositoryName:
     Value: !Ref EcrRepository

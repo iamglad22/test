@@ -33,6 +33,13 @@ Parameters:
 
   EcsRoleArn:
     Type: String
+
+  #AccountId:
+  #  Type: String
+  #Region:
+  #  Type: String
+  #ImageTag:
+  #  Type: String
 Resources:
   # =====================
   # ECS Task Definitions
@@ -43,6 +50,7 @@ Resources:
       ContainerDefinitions:
         - Name: !Ref ECSContainerName
           Image: !Ref ContainerImage
+          #Image: !Sub "${AccountId}.dkr.ecr.${Region}.amazonaws.com/my-repo:${ImageTag}"
           PortMappings:
             - ContainerPort: !Ref ContainerPort
               Protocol: tcp

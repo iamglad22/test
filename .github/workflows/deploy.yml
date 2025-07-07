@@ -10,7 +10,6 @@ env:
   #STACK_NAME: infrastructure-stack
   ENV_NAME: dev
   PARAMS_FILE: aws-cloudformation/parameters/dev.json
-  #InfraCode: mcfleetx
   VPC_TEMPLATE: aws-cloudformation/templates/aws-networking.yaml
   SG_TEMPLATE: aws-cloudformation/templates/aws-sg.yaml
   ALB_TEMPLATE: aws-cloudformation/templates/aws-ecs-loadbalancer.yaml

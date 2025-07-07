@@ -123,9 +123,9 @@ jobs:
             --stack-name ${{ env.ENV_NAME }}-network \
             --query "Stacks[0].Outputs[?OutputKey=='PrivateSubnetId1'].OutputValue" \
             --output text)
-          PRIVATE_SUBNET1=$(aws cloudformation describe-stacks \
+          PRIVATE_SUBNET2=$(aws cloudformation describe-stacks \
             --stack-name ${{ env.ENV_NAME }}-network \
-            --query "Stacks[0].Outputs[?OutputKey=='PrivateSubnetId1'].OutputValue" \
+            --query "Stacks[0].Outputs[?OutputKey=='PrivateSubnetId2'].OutputValue" \
             --output text)
           
           echo "vpc_name=$VPC_NAME" >> $GITHUB_OUTPUT
