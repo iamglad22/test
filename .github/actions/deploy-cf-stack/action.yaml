@@ -37,7 +37,7 @@ runs:
         aws cloudformation deploy \
           --stack-name "${{ inputs.stack-name }}" \
           --template-file "${{ inputs.template-file }}" \
-          --parameter-overrides $PARAMS
+          --parameter-overrides $PARAMS \
           --capabilities CAPABILITY_NAMED_IAM
     #  shell: bash
 
