@@ -43,11 +43,16 @@ jobs:
 
       - name: Lint CloudFormation templates
         env:
-          PARAMETER_FILE: aws-cloudformation/parameters/dev.json
+          PARAMETER_FILE: ${{ env.PARAMS_FILE }}
         #run: cfn-lint -t aws-cloudformation/**/*.yaml --parameters ${{ env.PARAMS_FILE }}
         run: |
-          cfn-lint aws-cloudformation/templates/*.yaml \
-            --template-parameters $PARAMETER_FILE
+          for template in aws-cloudformation/templates/*.yaml; do
+            echo "Linting $template"
+            cfn-lint "$template" --parameters file://$PARAMETER_FILE
+          done
+
+        #  cfn-lint aws-cloudformation/templates/*.yaml \
+        #    --template-parameters $PARAMETER_FILE
 
         #  find aws-cloudformation/templates -type f \( -name "*.yaml" -o -name "*.yml" -o -name "*.json" \) -not -path "aws-cloudformation/parameters/*" | while read file; do
         #    echo "Linting $file"
@@ -368,9 +373,9 @@ jobs:
             --template-file aws-cloudformation/templates/aws-s3-policy.yaml \
             --stack-name ${{ env.ENV_NAME }}-s3-policy \
             --parameter-overrides \
-              S3BucketId=${{ needs.deploy_s3.outputs.s3_id }}
-              S3Arn=${{ needs.deploy_s3.outputs.s3_arn }}
-              CloudFrontId=${{ needs.deploy_cloudfront.outputs.cloudfront_id }}
+              S3BucketId=${{ needs.deploy_s3.outputs.s3_id }} \
+              S3Arn=${{ needs.deploy_s3.outputs.s3_arn }} \
+              CloudFrontId=${{ needs.deploy_cloudfront.outputs.cloudfront_id }} \
               $PARAMS
 
   deploy_ecr:

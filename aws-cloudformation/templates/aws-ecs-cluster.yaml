@@ -3,6 +3,8 @@ Description: IFM CloudFormation - Cluster
 Parameters:
   InfraCode:
     Type: String
+  ENV_NAME:
+    Type: String
 #  ClusterName:
 #    Type: String
 #    Description: ECS Cluster Name

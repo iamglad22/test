@@ -11,6 +11,9 @@ Parameters:
 
   ECSLogGroupRetention:
     Type: Number
+
+  ENV_NAME:
+    Type: String
 Resources:
   # =====================
   # Log Group
