@@ -77,6 +77,58 @@ jobs:
           params-file: ${{ env.PARAMS_FILE }}
           output-keys: VPCId,PublicSubnetId1,PublicSubnetId2,PrivateSubnetId1,PrivateSubnetId2
 
+
+  deploy_igw:
+    runs-on: ubuntu-latest
+    needs: deploy_network
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      - name: Configure AWS Credentials
+        uses: ./.github/actions/aws-config
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Deploy CloudFormation Stack - Networking IGW
+        id: network
+        uses: ./.github/actions/deploy-cf-stack
+        with:
+          stack-name: ${{ env.ENV_NAME }}-igw
+          template-file: ${{ env.VPC_TEMPLATE }}
+          params-file: ${{ env.PARAMS_FILE }}
+          extra-params: |
+            VPCId=${{ needs.deploy_network.outputs.VPCId }}
+            PublicSubnetId1=${{ needs.deploy_network.outputs.PublicSubnetId1 }}
+            PublicSubnetId2=${{ needs.deploy_network.outputs.PublicSubnetId2 }}
+
+
+  deploy_nat:
+    runs-on: ubuntu-latest
+    needs: deploy_network
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      - name: Configure AWS Credentials
+        uses: ./.github/actions/aws-config
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Deploy CloudFormation Stack - Networking NAT
+        id: network
+        uses: ./.github/actions/deploy-cf-stack
+        with:
+          stack-name: ${{ env.ENV_NAME }}-nat
+          template-file: ${{ env.VPC_TEMPLATE }}
+          params-file: ${{ env.PARAMS_FILE }}
+          extra-params: |
+            VPCId=${{ needs.deploy_network.outputs.VPCId }}
+            PublicSubnetId1=${{ needs.deploy_network.outputs.PublicSubnetId1 }}
+            PrivateSubnetId1=${{ needs.deploy_network.outputs.PrivateSubnetId1 }}
+            PrivateSubnetId2=${{ needs.deploy_network.outputs.PrivateSubnetId2 }}
+
+
   deploy_sg:
     runs-on: ubuntu-latest
     needs: deploy_network
@@ -373,7 +425,7 @@ jobs:
           stack-name: ${{ env.ENV_NAME }}-ecs-role
           template-file: ${{ env.CF_TEMPLATE }}
           params-file: ${{ env.PARAMS_FILE }}
-          output-keys: ECS_ROLE_ARN
+          output-keys: EcsRoleArn
 
 
       - name: Deploy CloudFormation Stack - ECS Cluster

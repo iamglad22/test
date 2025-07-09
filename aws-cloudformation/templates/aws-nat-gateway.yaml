@@ -1,0 +1,65 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: IFM CloudFormation - Networking NAT Gateway
+Parameters:
+  InfraCode:
+    Type: String
+  VPCId:
+    Type: String
+
+  PublicSubnetId1:
+    Type: String
+
+  PrivateSubnetId1:
+    Type: String
+
+  PrivateSubnetId2:
+    Type: String
+
+
+Resources:
+  # ====================================
+  # Networking: NAT
+  # ====================================
+
+  EIPForNat:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+
+  NatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt EIPForNat.AllocationId
+      SubnetId: !Ref PublicSubnetId1
+      Tags:
+        - Key: Name
+          Value: !Sub "${InfraCode}-natgw"
+        #  Value: !Ref NatGatewayName
+      
+
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPCId
+      Tags:
+        - Key: Name
+          Value: !Sub "${InfraCode}-rt-priv"
+        #  Value: !Ref PrivateRouteTableName
+  PrivateRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway
+
+  PrivateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnetId1
+      RouteTableId: !Ref PrivateRouteTable
+
+  PrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnetId2
+      RouteTableId: !Ref PrivateRouteTable

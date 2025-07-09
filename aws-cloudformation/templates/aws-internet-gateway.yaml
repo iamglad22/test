@@ -1,0 +1,67 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: IFM CloudFormation - Networking Internet Gateway
+Parameters:
+  InfraCode:
+    Type: String
+  VpcCIDR:
+    Type: String
+  VPCId:
+    Type: String
+  PublicSubnetId1:
+    Type: String
+  PublicSubnetId2:
+    Type: String
+
+
+Resources:
+  # ====================================
+  # Networking: IGW
+  # ====================================
+  MyVpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${InfraCode}-vpc"
+          #Value: !Ref VpcName
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub "${InfraCode}-igw"
+        #  Value: !Ref InternetGatewayName
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPCId
+      InternetGatewayId: !Ref InternetGateway
+      
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPCId
+      Tags:
+        - Key: Name
+          Value: !Sub "${InfraCode}-rt-pub"
+        #  Value: !Ref PublicRouteTableName
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+  PublicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnetId1
+      RouteTableId: !Ref PublicRouteTable
+  PublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnetId2
+      RouteTableId: !Ref PublicRouteTable
