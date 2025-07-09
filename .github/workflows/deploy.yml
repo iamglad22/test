@@ -302,7 +302,7 @@ jobs:
             S3BucketId=${{ needs.deploy_s3.outputs.S3BucketId }}
             S3Arn=${{ needs.deploy_s3.outputs.S3Arn }}
             CloudFrontId=${{ needs.deploy_cloudfront.outputs.CloudFrontId }}
-          output-keys: VPCId,PublicSubnetId1
+
 
 
   deploy_ecr:
@@ -364,8 +364,6 @@ jobs:
           AWS_REGION: ${{ env.AWS_REGION }}
           ECR_REPO_NAME: ${{ needs.deploy_ecr.outputs.EcrRepositoryName }}
         run: |
-          echo "Printing GITHUB_OUTPUT"
-          cat "$GITHUB_OUTPUT"
           IMAGE_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_NAME
           echo "image_uri=$IMAGE_URI" >> "$GITHUB_OUTPUT"
           echo "IMAGE_URI=$IMAGE_URI" >> "$GITHUB_ENV"
@@ -463,7 +461,7 @@ jobs:
         env:
           AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
           AWS_REGION: ${{ env.AWS_REGION }}
-          ECR_REPO_NAME: ${{ needs.deploy_ecr.outputs.EcrRepositoryName }}
+          EcrRepositoryName: ${{ needs.deploy_ecr.outputs.EcrRepositoryName }}
         uses: ./.github/actions/deploy-cf-stack
         with:
           stack-name: ${{ env.ENV_NAME }}-ecs-taskdefinition
@@ -472,8 +470,9 @@ jobs:
           extra-params: |
             LogGroupId=${{ needs.deploy_ecs-req.outputs.LogGroupId }}
             EcsRoleArn=${{ needs.deploy_ecs-req.outputs.EcsRoleArn }}
-            ContainerImage=${{ needs.deploy_ecr_docker_image.outputs.image_uri }}
+            ContainerImage=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${EcrRepositoryName}:latest
           output-keys: TaskDefinitionId
+
 
 
       - name: Deploy CloudFormation Stack - ECS Service
