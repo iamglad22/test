@@ -129,7 +129,7 @@ jobs:
           template-file: ${{ env.ALB_TEMPLATE }}
           params-file: ${{ env.PARAMS_FILE }}
           extra-params: |
-            VPCId=${{ needs.deploy_network.outputs.vpc_name }}
+            VPCId=${{ needs.deploy_network.outputs.VPCId }}
             PublicSubnetId1=${{ needs.deploy_network.outputs.public_subnet1 }}
             PublicSubnetId2=${{ needs.deploy_network.outputs.public_subnet2 }}
             SecurityGroupAlbId=${{ needs.deploy_sg.outputs.sg_alb_id }}
@@ -406,7 +406,7 @@ jobs:
         env:
           AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
           AWS_REGION: ${{ env.AWS_REGION }}
-          ECR_REPO_NAME: ${{ needs.deploy_ecr.outputs.ecr_repository_name }}
+          ECR_REPO_NAME: ${{ needs.deploy_ecr.outputs.EcrRepositoryName }}
         uses: ./.github/actions/deploy-cf-stack
         with:
           stack-name: ${{ env.ENV_NAME }}-ecs-taskdefinition
