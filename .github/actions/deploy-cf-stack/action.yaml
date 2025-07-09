@@ -18,7 +18,14 @@ inputs:
     required: false
     description: 'Comma-separated list of OutputKeys to extract from the stack'
 # Define outputs dynamically by parsing post-deployment as needed
-outputs: {}
+#outputs: {}
+outputs:
+  VPCId:
+    value: ${{ steps.get_outputs.outputs.VPCId }}
+    description: VPD ID
+  EcrRepositoryName:
+    value: ${{ steps.get_outputs.outputs.EcrRepositoryName }}
+    description: ECR Repository name
 
 #  outputs-json:
 #    description: JSON of outputs
