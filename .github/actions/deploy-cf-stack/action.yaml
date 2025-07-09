@@ -80,8 +80,8 @@ outputs:
   ECSClusterId:
     value: ${{ steps.get_outputs.outputs.ECSClusterId }}
     description: ECS Cluster ID
-  task_definition_id:
-    value: ${{ steps.get_outputs.outputs.task_definition_id }}
+  TaskDefinitionId:
+    value: ${{ steps.get_outputs.outputs.TaskDefinitionId }}
     description: ECS Task Definition ID
   EcrRepositoryName:
     value: ${{ steps.get_outputs.outputs.EcrRepositoryName }}
