@@ -51,10 +51,10 @@ runs:
               --output json)
 
         
-        echo "Extracting outputs: ${{ input.output-keys }}"
+        echo "Extracting outputs: ${{ inputs.output-keys }}"
 
         # Define output keys
-        IFS=',' read -ra KEYS <<< "${{ input.output-keys }}"
+        IFS=',' read -ra KEYS <<< "${{ inputs.output-keys }}"
 
         # Loop through keys and extract values
         for KEY in "${KEYS[@]}"; do
