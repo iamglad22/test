@@ -494,12 +494,9 @@ jobs:
           template-file: ${{ env.ECS_SERVICE_TEMPLATE }}
           params-file: ${{ env.PARAMS_FILE }}
           extra-params: |
+            TaskDefinitionId=${{ needs.deploy_ecs_taskdefinition.outputs.TaskDefinitionId }}
             ECSClusterId=${{ needs.deploy_ecs-req.outputs.ECSClusterId }}
             AppLoadBalancerTargetGroupId=${{ needs.deploy_alb.outputs.AppLoadBalancerTargetGroupId }}
             PrivateSubnetId1=${{ needs.deploy_network.outputs.PrivateSubnetId1 }}
             PrivateSubnetId2=${{ needs.deploy_network.outputs.PrivateSubnetId2 }}
             SecurityGroupEcsId=${{ needs.deploy_sg.outputs.SecurityGroupEcsId }}
-            TaskDefinitionId=${{ needs.deploy_ecs_taskdefinition.outputs.TaskDefinitionId }}
-
-
-         
