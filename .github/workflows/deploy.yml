@@ -11,6 +11,8 @@ env:
   ENV_NAME: dev
   PARAMS_FILE: aws-cloudformation/parameters/dev.json
   VPC_TEMPLATE: aws-cloudformation/templates/aws-networking.yaml
+  IGW_TEMPLATE: aws-cloudformation/templates/aws-internet-gateway.yaml
+  NAT_TEMPLATE: aws-cloudformation/templates/aws-nat-gateway.yaml
   SG_TEMPLATE: aws-cloudformation/templates/aws-sg.yaml
   ALB_TEMPLATE: aws-cloudformation/templates/aws-ecs-loadbalancer.yaml
   APIG_TEMPLATE: aws-cloudformation/templates/aws-apigateway.yaml
@@ -95,7 +97,7 @@ jobs:
         uses: ./.github/actions/deploy-cf-stack
         with:
           stack-name: ${{ env.ENV_NAME }}-igw
-          template-file: ${{ env.VPC_TEMPLATE }}
+          template-file: ${{ env.IGW_TEMPLATE }}
           params-file: ${{ env.PARAMS_FILE }}
           extra-params: |
             VPCId=${{ needs.deploy_network.outputs.VPCId }}
@@ -120,7 +122,7 @@ jobs:
         uses: ./.github/actions/deploy-cf-stack
         with:
           stack-name: ${{ env.ENV_NAME }}-nat
-          template-file: ${{ env.VPC_TEMPLATE }}
+          template-file: ${{ env.NAT_TEMPLATE }}
           params-file: ${{ env.PARAMS_FILE }}
           extra-params: |
             VPCId=${{ needs.deploy_network.outputs.VPCId }}
