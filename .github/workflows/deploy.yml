@@ -442,7 +442,7 @@ jobs:
           output-keys: ECSClusterId
 
 
-  deploy_ecs-microservice:
+  deploy_ecs_taskdefinition:
     runs-on: ubuntu-latest
     needs: [deploy_ecr, deploy_ecr_docker_image, deploy_ecs-req, deploy_alb, deploy_network, deploy_sg]
     outputs:
@@ -474,7 +474,18 @@ jobs:
           output-keys: TaskDefinitionId
 
 
-
+  deploy_ecs-service:
+    runs-on: ubuntu-latest
+    needs: [deploy_ecr, deploy_ecr_docker_image, deploy_ecs-req, deploy_alb, deploy_network, deploy_sg, deploy_ecs_taskdefinition]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      - name: Configure AWS Credentials
+        uses: ./.github/actions/aws-config
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }} 
       - name: Deploy CloudFormation Stack - ECS Service
         id: ecs-service
         uses: ./.github/actions/deploy-cf-stack
@@ -484,11 +495,11 @@ jobs:
           params-file: ${{ env.PARAMS_FILE }}
           extra-params: |
             ECSClusterId=${{ needs.deploy_ecs-req.outputs.ECSClusterId }}
-            TaskDefinitionId=${{ steps.ecs-taskdefinition.outputs.TaskDefinitionId }}
             AppLoadBalancerTargetGroupId=${{ needs.deploy_alb.outputs.AppLoadBalancerTargetGroupId }}
             PrivateSubnetId1=${{ needs.deploy_network.outputs.PrivateSubnetId1 }}
             PrivateSubnetId2=${{ needs.deploy_network.outputs.PrivateSubnetId2 }}
             SecurityGroupEcsId=${{ needs.deploy_sg.outputs.SecurityGroupEcsId }}
+            TaskDefinitionId=${{ needs.deploy_ecs_taskdefinition.outputs.TaskDefinitionId }}
 
 
          
