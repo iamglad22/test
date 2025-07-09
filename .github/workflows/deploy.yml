@@ -102,6 +102,7 @@ jobs:
           extra-params: |
             VPCId=${{ needs.deploy_network.outputs.VPCId }}
           output-keys: SecurityGroupEcsId,SecurityGroupAlbId
+
         #  parameters: >-
         #    VPCId=$(echo '${{ needs.deploy_network.outputs.network_outputs }}' | jq -r '.[]|select(.OutputKey=="VPCId").OutputValue')
       
@@ -309,6 +310,8 @@ jobs:
           AWS_REGION: ${{ env.AWS_REGION }}
           ECR_REPO_NAME: ${{ needs.deploy_ecr.outputs.EcrRepositoryName }}
         run: |
+          echo "Printing GITHUB_OUTPUT"
+          cat "$GITHUB_OUTPUT"
           IMAGE_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_NAME
           echo "image_uri=$IMAGE_URI" >> "$GITHUB_OUTPUT"
           echo "IMAGE_URI=$IMAGE_URI" >> "$GITHUB_ENV"
