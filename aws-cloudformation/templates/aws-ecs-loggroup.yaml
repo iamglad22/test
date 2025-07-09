@@ -6,7 +6,8 @@ Parameters:
 #  ECSLogGroupName:
 #    Type: String
 #    Description: Log group name of ECS container
-  ServiceName:
+#  ServiceName:
+  ECSContainerName:
     Type: String
 
   ECSLogGroupRetention:
@@ -22,7 +23,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       #LogGroupName: !Ref ECSLogGroupName
-      LogGroupName: !Sub "${InfraCode}/${EnvName}/${ServiceName}-log"
+      LogGroupName: !Sub "${InfraCode}/${EnvName}/${ECSContainerName}-log"
       RetentionInDays: !Ref ECSLogGroupRetention
 
 Outputs:
