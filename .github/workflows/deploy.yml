@@ -425,7 +425,7 @@ jobs:
         uses: ./.github/actions/deploy-cf-stack
         with:
           stack-name: ${{ env.ENV_NAME }}-ecs-role
-          template-file: ${{ env.CF_TEMPLATE }}
+          template-file: ${{ env.ECS_ROLE_TEMPLATE }}
           params-file: ${{ env.PARAMS_FILE }}
           output-keys: EcsRoleArn
 
