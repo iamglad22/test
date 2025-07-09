@@ -50,10 +50,11 @@ runs:
               --query 'Stacks[0].Outputs' \
               --output json)
 
-        echo "Extracting outputs: S3RegionalDomainName,S3Arn,S3BucketId"
+        
+        echo "Extracting outputs: ${{ input.output-keys }}"
 
         # Define output keys
-        IFS=',' read -ra KEYS <<< "S3RegionalDomainName,S3Arn,S3BucketId"
+        IFS=',' read -ra KEYS <<< "${{ input.output-keys }}"
 
         # Loop through keys and extract values
         for KEY in "${KEYS[@]}"; do
