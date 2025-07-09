@@ -136,8 +136,9 @@ runs:
             echo "⚠️ Warning: OutputKey '$CLEAN_KEY' not found in stack outputs." >&2
           fi
         done
-      #  echo "Printing GITHUB_OUTPUT"
-      #  cat "$GITHUB_OUTPUT"
+        echo "Printing GITHUB_OUTPUT."
+        cat "$GITHUB_OUTPUT"
+
 
 
 
