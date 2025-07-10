@@ -5,9 +5,6 @@ Parameters:
     Type: String
   AppLoadBalancerTargetGroupId:
     Type: String
-#  ServiceName:
-#    Type: String
-#    Description: ECS Service Name
 
   ContainerPort:
     Type: Number

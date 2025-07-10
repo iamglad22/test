@@ -61,6 +61,7 @@ jobs:
       PublicSubnetId2: ${{ steps.network.outputs.PublicSubnetId2 }}
       PrivateSubnetId1: ${{ steps.network.outputs.PrivateSubnetId1 }}
       PrivateSubnetId2: ${{ steps.network.outputs.PrivateSubnetId2 }}
+      PrivateSubnetId3: ${{ steps.network.outputs.PrivateSubnetId3 }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -77,7 +78,7 @@ jobs:
           stack-name: ${{ env.ENV_NAME }}-network
           template-file: ${{ env.VPC_TEMPLATE }}
           params-file: ${{ env.PARAMS_FILE }}
-          output-keys: VPCId,PublicSubnetId1,PublicSubnetId2,PrivateSubnetId1,PrivateSubnetId2
+          output-keys: VPCId,PublicSubnetId1,PublicSubnetId2,PrivateSubnetId1,PrivateSubnetId2,PrivateSubnetId3
 
 
   deploy_igw:
@@ -129,6 +130,7 @@ jobs:
             PublicSubnetId1=${{ needs.deploy_network.outputs.PublicSubnetId1 }}
             PrivateSubnetId1=${{ needs.deploy_network.outputs.PrivateSubnetId1 }}
             PrivateSubnetId2=${{ needs.deploy_network.outputs.PrivateSubnetId2 }}
+            PrivateSubnetId3=${{ needs.deploy_network.outputs.PrivateSubnetId3 }}
 
 
   deploy_sg:
@@ -489,13 +491,15 @@ jobs:
           aws-region: ${{ env.AWS_REGION }} 
       - name: Deploy CloudFormation Stack - ECS Service
         id: ecs-service
+        env:
+          TaskDef_Id: ${{ needs.deploy_ecs_td.outputs.TaskDefinitionId }}
         uses: ./.github/actions/deploy-cf-stack
         with:
           stack-name: ${{ env.ENV_NAME }}-ecs-service
           template-file: ${{ env.ECS_SERVICE_TEMPLATE }}
           params-file: ${{ env.PARAMS_FILE }}
           extra-params: |
-            TaskDefinitionId=${{ needs.deploy_ecs_td.outputs.TaskDefinitionId }}
+            TaskDefinitionId=${TaskDef_Id}
             ECSClusterId=${{ needs.deploy_ecs-req.outputs.ECSClusterId }}
             AppLoadBalancerTargetGroupId=${{ needs.deploy_alb.outputs.AppLoadBalancerTargetGroupId }}
             PrivateSubnetId1=${{ needs.deploy_network.outputs.PrivateSubnetId1 }}

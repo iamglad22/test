@@ -35,6 +35,9 @@ outputs:
   PrivateSubnetId2:
     value: ${{ steps.get_outputs.outputs.PrivateSubnetId2 }}
     description: Private Subnet ID
+  PrivateSubnetId3:
+    value: ${{ steps.get_outputs.outputs.PrivateSubnetId3 }}
+    description: Private Subnet ID
   SecurityGroupEcsId:
     value: ${{ steps.get_outputs.outputs.SecurityGroupEcsId }}
     description: Security Group for ECS
@@ -83,7 +86,7 @@ outputs:
   TaskDefinitionId:
     value: ${{ steps.get_outputs.outputs.TaskDefinitionId }}
     description: ECS Task Definition ID
-    
+
   EcrRepositoryName:
     value: ${{ steps.get_outputs.outputs.EcrRepositoryName }}
     description: ECR Repository name

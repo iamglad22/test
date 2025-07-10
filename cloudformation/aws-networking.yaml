@@ -23,8 +23,6 @@ Parameters:
 #    Type: String
   PrivateSubnet2CIDR:
     Type: String
-  PrivateSubnet3CIDR:
-    Type: String
 #  PrivateSubnet2Name:
 #    Type: String
 #  NatGatewayName:
@@ -105,41 +103,30 @@ Resources:
           Value: !Sub "${InfraCode}-priv-subnet2"
         #  Value: !Ref PrivateSubnet2Name
 
-  PrivateSubnet3:
-    Type: AWS::EC2::Subnet
-    Properties:
-      VpcId: !Ref MyVpc
-      CidrBlock: !Ref PrivateSubnet3CIDR
-      AvailabilityZone: !Select
-        - 1
-        - !GetAZs ''
-      MapPublicIpOnLaunch: false
-      Tags:
-        - Key: Name
-          Value: !Sub "${InfraCode}-priv-subnet3"
-
 
 Outputs:
   VPCId:
     Value: !Ref MyVpc
     Description: ID of the VPC
-
+  #  Export:
+  #    Name: !Sub "${AWS::StackName}-vpc"
   PublicSubnetId1:
     Value: !Ref PublicSubnet1
     Description: Public subnet ID
-
+  #  Export:
+  #    Name: !Sub "${AWS::StackName}-pub-subnet1"
   PublicSubnetId2:
     Value: !Ref PublicSubnet2
     Description: Public subnet ID
-
+  #  Export:
+  #    Name: !Sub "${AWS::StackName}-pub-subnet2"
   PrivateSubnetId1:
     Value: !Ref PrivateSubnet1
     Description: Private subnet ID
-
+  #  Export:
+  #    Name: !Sub "${AWS::StackName}-priv-subnet1"
   PrivateSubnetId2:
     Value: !Ref PrivateSubnet2
     Description: Private subnet ID
-
-  PrivateSubnetId3:
-    Value: !Ref PrivateSubnet3
-    Description: Private subnet ID
+  #  Export:
+  #    Name: !Sub "${AWS::StackName}-priv-subnet2"

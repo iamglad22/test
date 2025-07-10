@@ -14,9 +14,6 @@ Parameters:
 
   PrivateSubnetId2:
     Type: String
-    
-  PrivateSubnetId3:
-    Type: String
 
 
 Resources:
@@ -65,10 +62,4 @@ Resources:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       SubnetId: !Ref PrivateSubnetId2
-      RouteTableId: !Ref PrivateRouteTable
-
-  PrivateSubnet3RouteTableAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      SubnetId: !Ref PrivateSubnetId3
       RouteTableId: !Ref PrivateRouteTable
