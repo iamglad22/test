@@ -83,6 +83,7 @@ outputs:
   TaskDefinitionId:
     value: ${{ steps.get_outputs.outputs.TaskDefinitionId }}
     description: ECS Task Definition ID
+    
   EcrRepositoryName:
     value: ${{ steps.get_outputs.outputs.EcrRepositoryName }}
     description: ECR Repository name
