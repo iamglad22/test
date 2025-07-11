@@ -455,7 +455,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [deploy_ecr, deploy_ecr_docker_image, deploy_ecs-req, deploy_alb, deploy_network, deploy_sg]
     outputs:
-      ECSTaskDefinitionId: ${{ steps.ecs-td.outputs.ECSTaskDefinitionId }}
+      ECSTaskDefinitionId: ${{ steps.ecs_taskdefinition.outputs.ECSTaskDefinitionId }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -466,21 +466,47 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}            
       - name: Deploy CloudFormation Stack - ECS Task Definition
-        id: ecs-td
         env:
           AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
           AWS_REGION: ${{ env.AWS_REGION }}
           EcrRepositoryName: ${{ needs.deploy_ecr.outputs.EcrRepositoryName }}
-        uses: ./.github/actions/deploy-cf-stack
-        with:
-          stack-name: ${{ env.ENV_NAME }}-ecs-taskdefinition
-          template-file: ${{ env.ECS_TD_TEMPLATE }}
-          params-file: ${{ env.PARAMS_FILE }}
-          extra-params: |
-            LogGroupId=${{ needs.deploy_ecs-req.outputs.LogGroupId }}
-            EcsRoleArn=${{ needs.deploy_ecs-req.outputs.EcsRoleArn }}
-            ContainerImage=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${EcrRepositoryName}:latest
-          output-keys: ECSTaskDefinitionId
+        run: |
+          PARAMS=$(jq -r '.[] | "\(.ParameterKey)=\(.ParameterValue)"' ${{ env.PARAMS_FILE }})
+          aws cloudformation deploy \
+            --template-file ${{ env.ECS_TD_TEMPLATE }} \
+            --stack-name ${{ env.ENV_NAME }}-ecs-taskdefinition \
+            --parameter-overrides \
+              LogGroupId=${{ needs.deploy_ecs-req.outputs.LogGroupId }} \
+              EcsRoleArn=${{ needs.deploy_ecs-req.outputs.EcsRoleArn }} \
+              ContainerImage=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${EcrRepositoryName}:latest \
+              $PARAMS
+    #    id: ecs-td
+    #    env:
+    #      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+    #      AWS_REGION: ${{ env.AWS_REGION }}
+    #      EcrRepositoryName: ${{ needs.deploy_ecr.outputs.EcrRepositoryName }}
+    #    uses: ./.github/actions/deploy-cf-stack
+    #    with:
+    #      stack-name: ${{ env.ENV_NAME }}-ecs-taskdefinition
+    #      template-file: ${{ env.ECS_TD_TEMPLATE }}
+    #      params-file: ${{ env.PARAMS_FILE }}
+    #      extra-params: |
+    #        LogGroupId=${{ needs.deploy_ecs-req.outputs.LogGroupId }}
+    #        EcsRoleArn=${{ needs.deploy_ecs-req.outputs.EcsRoleArn }}
+    #        ContainerImage=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${EcrRepositoryName}:latest
+    #      output-keys: ECSTaskDefinitionId
+
+      - name: Get ECS Task Definition Outputs
+        id: ecs_taskdefinition
+        run: |
+          ECSTaskDefinitionId=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.ENV_NAME }}-ecs-taskdefinition \
+            --query "Stacks[0].Outputs[?OutputKey=='ECSTaskDefinitionId'].OutputValue" \
+            --output text)
+      
+ 
+            echo "ECSTaskDefinitionId=$ECSTaskDefinitionId" >> $GITHUB_OUTPUT 
+
 
   deploy_ecs-service:
     runs-on: ubuntu-latest
@@ -498,15 +524,15 @@ jobs:
         run: echo "${{ needs.deploy_ecs_td.outputs.ECSTaskDefinitionId }}"
       - name: Deploy CloudFormation Stack - ECS Service
         id: ecs-service
-        env:
-          TaskDef_Id: ${{ needs.deploy_ecs_td.outputs.ECSTaskDefinitionId }}
+      #  env:
+      #    TaskDef_Id: ${{ needs.deploy_ecs_td.outputs.ECSTaskDefinitionId }}
         uses: ./.github/actions/deploy-cf-stack
         with:
           stack-name: ${{ env.ENV_NAME }}-ecs-service
           template-file: ${{ env.ECS_SERVICE_TEMPLATE }}
           params-file: ${{ env.PARAMS_FILE }}
           extra-params: |
-            ECSTaskDefinitionId=${TaskDef_Id}
+            ECSTaskDefinitionId=${{ needs.deploy_ecs_td.outputs.ECSTaskDefinitionId }}
             ECSClusterId=${{ needs.deploy_ecs-req.outputs.ECSClusterId }}
             AppLoadBalancerTargetGroupId=${{ needs.deploy_alb.outputs.AppLoadBalancerTargetGroupId }}
             PrivateSubnetId1=${{ needs.deploy_network.outputs.PrivateSubnetId1 }}
