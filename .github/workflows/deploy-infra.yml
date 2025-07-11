@@ -506,6 +506,7 @@ jobs:
       
  
             echo "ECSTaskDefinitionId=$ECSTaskDefinitionId" >> $GITHUB_OUTPUT 
+            echo $ECSTaskDefinitionId
 
 
   deploy_ecs-service:
