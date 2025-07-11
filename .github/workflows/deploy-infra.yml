@@ -50,6 +50,12 @@ jobs:
             cfn-lint -t "$template" 
           done
           
+      - name: Validate Cloudformation templates
+        run: |
+          for template in $(find aws-cloudformation/templates -name **.yaml" -o -name **.yml"); do
+            echo "Validating $template"
+            aws cloudformatio validate-template --template-body file://$template
+          done
 
 
   deploy_network:
@@ -504,7 +510,7 @@ jobs:
             --query "Stacks[0].Outputs[?OutputKey=='ECSTaskDefinitionId'].OutputValue" \
             --output text)
       
- 
+            echo "ECSTaskDefinitionId=$ECSTaskDefinitionId"
             echo "ECSTaskDefinitionId=$ECSTaskDefinitionId" >> $GITHUB_OUTPUT 
 
 
