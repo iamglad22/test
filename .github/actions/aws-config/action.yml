@@ -11,7 +11,9 @@ inputs:
   aws-secret-access-key:
     required: true
     description: AWS Account Secret Key
-
+  aws-account-id:
+    required: true
+    description: AWS Account ID
 
 runs:
   using: composite
@@ -23,3 +25,4 @@ runs:
         aws-access-key-id: ${{ inputs.aws-access-key-id }}
         aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
         aws-region: ${{ inputs.aws-region }}
+        aws-account-id: ${{ inputs.aws-account-id }}
