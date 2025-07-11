@@ -74,5 +74,6 @@ Resources:
 
 Outputs:
   ECSTaskDefinitionId:
-    Value: !Ref ECSTaskDefinition
+    #Value: !Ref ECSTaskDefinition
+    Value: !GetAtt ECSTaskDefinition.Arn
     Description: Task Definition ID
