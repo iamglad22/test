@@ -25,6 +25,8 @@ outputs:
     description: JSON object of all extracted outputs
     value: ${{ steps.get_outputs.outputs.outputs-json }}
 
+
+
 #outputs:
 #  VPCId:
 #    value: ${{ steps.get_outputs.outputs.VPCId }}
