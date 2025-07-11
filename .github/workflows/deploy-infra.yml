@@ -52,9 +52,9 @@ jobs:
           
       - name: Validate Cloudformation templates
         run: |
-          for template in $(find aws-cloudformation/templates -name **.yaml" -o -name **.yml"); do
+          for template in $(find aws-cloudformation/templates -name "*.yaml" -o -name "*.yml"); do
             echo "Validating $template"
-            aws cloudformatio validate-template --template-body file://$template
+            aws cloudformation validate-template --template-body file://$template
           done
 
 
@@ -512,6 +512,7 @@ jobs:
       
             echo "ECSTaskDefinitionId=$ECSTaskDefinitionId"
             echo "ECSTaskDefinitionId=$ECSTaskDefinitionId" >> $GITHUB_OUTPUT 
+            echo "ECSTaskDefinitionId=$ECSTaskDefinitionId" >> $GITHUB_ENV
             echo $ECSTaskDefinitionId
 
 
@@ -539,9 +540,9 @@ jobs:
           template-file: ${{ env.ECS_SERVICE_TEMPLATE }}
           params-file: ${{ env.PARAMS_FILE }}
           extra-params: |
-            ECSTaskDefinitionId=${{ needs.deploy_ecs_td.outputs.ECSTaskDefinitionId }}
             ECSClusterId=${{ needs.deploy_ecs-req.outputs.ECSClusterId }}
             AppLoadBalancerTargetGroupId=${{ needs.deploy_alb.outputs.AppLoadBalancerTargetGroupId }}
+            ECSTaskDefinitionId=${{ needs.deploy_ecs_td.outputs.ECSTaskDefinitionId }}
             PrivateSubnetId1=${{ needs.deploy_network.outputs.PrivateSubnetId1 }}
             PrivateSubnetId2=${{ needs.deploy_network.outputs.PrivateSubnetId2 }}
             SecurityGroupEcsId=${{ needs.deploy_sg.outputs.SecurityGroupEcsId }}
