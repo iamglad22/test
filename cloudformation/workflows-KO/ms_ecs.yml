@@ -19,10 +19,9 @@ env:
 jobs:
   call_infra:
     uses: ./.github/workflows/deploy-infra.yml
-    secrets:
+    with:
       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
       aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    with:
       aws-region: us-east-1
 
   deploy_ecs_td:
