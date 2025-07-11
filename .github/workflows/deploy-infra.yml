@@ -160,9 +160,9 @@ jobs:
           extra-params: |
             VPCId=${{ needs.deploy_network.outputs.VPCId }}
           output-keys: SecurityGroupEcsId,SecurityGroupAlbId
-          run: |
-            cf_out="{{ steps.security_group.outputs.outputs-json}}"
-            echo "VPCId: $(jq -r '.VPCId' <<< "$cf")"
+        #  run: |
+        #    cf_out="{{ steps.security_group.outputs.outputs-json}}"
+        #    echo "VPCId: $(jq -r '.VPCId' <<< "$cf")"
 
         #  parameters: >-
         #    VPCId=$(echo '${{ needs.deploy_network.outputs.network_outputs }}' | jq -r '.[]|select(.OutputKey=="VPCId").OutputValue')
