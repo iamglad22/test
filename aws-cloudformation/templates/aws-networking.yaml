@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: IFM CloudFormation - Networking
+Description: CloudFormation - Networking
 Parameters:
   InfraCode:
     Type: String

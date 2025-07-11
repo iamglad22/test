@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: IFM CloudFormation - Log Group
+Description: CloudFormation - Log Group
 Parameters:
   InfraCode:
     Type: String

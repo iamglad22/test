@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: IFM CloudFormation - ECR Repository
+Description: CloudFormation - ECR Repository
 Parameters:
   InfraCode:
     Type: String

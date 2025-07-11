@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: IFM CloudFormation - CloudFront
+Description: CloudFormation - CloudFront
 Parameters:
   InfraCode:
     Type: String

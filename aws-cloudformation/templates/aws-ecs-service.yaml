@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: IFM CloudFormation - ECS Service
+Description: CloudFormation - ECS Service
 Parameters:
   InfraCode:
     Type: String
@@ -12,7 +12,7 @@ Parameters:
 
   ECSClusterId:
     Type: String
-  TaskDefinitionId:
+  ECSTaskDefinitionId:
     Type: String
   ECSContainerName:
     Type: String
@@ -42,7 +42,7 @@ Resources:
       DesiredCount: !Ref ECSServiceDesiredCount
       LaunchType: FARGATE
       #TaskDefinition: !Ref ECSTaskDefinition
-      TaskDefinition: !Ref TaskDefinitionId
+      TaskDefinition: !Ref ECSTaskDefinitionId
       LoadBalancers:
         - TargetGroupArn: !Ref AppLoadBalancerTargetGroupId
           #TargetGroupArn: !Ref ALBTG

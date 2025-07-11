@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: IFM CloudFormation for Moeve
+Description: CloudFormation for Moeve
 Parameters:
 #  InfraCode:
 #    Type: String
@@ -73,6 +73,6 @@ Resources:
       NetworkMode: awsvpc
 
 Outputs:
-  TaskDefinitionId:
+  ECSTaskDefinitionId:
     Value: !Ref ECSTaskDefinition
     Description: Task Definition ID

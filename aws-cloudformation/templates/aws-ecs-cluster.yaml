@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: IFM CloudFormation - Cluster
+Description: CloudFormation - Cluster
 Parameters:
   InfraCode:
     Type: String

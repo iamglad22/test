@@ -19,77 +19,83 @@ inputs:
     description: 'Comma-separated list of OutputKeys to extract from the stack'
 # Define outputs dynamically by parsing post-deployment as needed
 #outputs: {}
-outputs:
-  VPCId:
-    value: ${{ steps.get_outputs.outputs.VPCId }}
-    description: VPD ID
-  PublicSubnetId1:
-    value: ${{ steps.get_outputs.outputs.PublicSubnetId1 }}
-    description: Public Subnet ID
-  PublicSubnetId2:
-    value: ${{ steps.get_outputs.outputs.PublicSubnetId2 }}
-    description: Public Subnet ID
-  PrivateSubnetId1:
-    value: ${{ steps.get_outputs.outputs.PrivateSubnetId1 }}
-    description: Private Subnet ID
-  PrivateSubnetId2:
-    value: ${{ steps.get_outputs.outputs.PrivateSubnetId2 }}
-    description: Private Subnet ID
-  PrivateSubnetId3:
-    value: ${{ steps.get_outputs.outputs.PrivateSubnetId3 }}
-    description: Private Subnet ID
-  SecurityGroupEcsId:
-    value: ${{ steps.get_outputs.outputs.SecurityGroupEcsId }}
-    description: Security Group for ECS
-  SecurityGroupAlbId:
-    value: ${{ steps.get_outputs.outputs.SecurityGroupAlbId }}
-    description: Security Group for ALB
-  AppLoadBalancerDnsName:
-    value: ${{ steps.get_outputs.outputs.AppLoadBalancerDnsName }}
-    description: Application Load Balancer DNS Name
-  AppLoadBalancerTargetGroupId:
-    value: ${{ steps.get_outputs.outputs.AppLoadBalancerTargetGroupId }}
-    description: Application Load Balancer Target Group
-  ApiGatewayId:
-    value: ${{ steps.get_outputs.outputs.ApiGatewayId }}
-    description: API Gateway ID
-  ApiGatewayDomainName:
-    value: ${{ steps.get_outputs.outputs.ApiGatewayDomainName }}
-    description: API Gateway Domain Name
-  S3RegionalDomainName:
-    value: ${{ steps.get_outputs.outputs.S3RegionalDomainName }}
-    description: S3 Regional Domain Name
-  S3Arn:
-    value: ${{ steps.get_outputs.outputs.S3Arn }}
-    description: S3 ARN
-  S3BucketId:
-    value: ${{ steps.get_outputs.outputs.S3BucketId }}
-    description: S3 Bucket ID
-  CloudFrontURL:
-    value: ${{ steps.get_outputs.outputs.CloudFrontURL }}
-    description: CloudFront URL
-  CloudFrontId:
-    value: ${{ steps.get_outputs.outputs.CloudFrontId }}
-    description: CloudFront ID
-  image_uri:
-    value: ${{ steps.get_outputs.outputs.image_uri }}
-    description: Docker Image URI
-  LogGroupId:
-    value: ${{ steps.get_outputs.outputs.LogGroupId }}
-    description: ECS Log Group ID
-  EcsRoleArn:
-    value: ${{ steps.get_outputs.outputs.EcsRoleArn }}
-    description: ECS IAM Role ARN
-  ECSClusterId:
-    value: ${{ steps.get_outputs.outputs.ECSClusterId }}
-    description: ECS Cluster ID
-  TaskDefinitionId:
-    value: ${{ steps.get_outputs.outputs.TaskDefinitionId }}
-    description: ECS Task Definition ID
 
-  EcrRepositoryName:
-    value: ${{ steps.get_outputs.outputs.EcrRepositoryName }}
-    description: ECR Repository name
+outputs:
+  outputs-json:
+    description: JSON object of all extracted outputs
+    value: ${{ steps.get_outputs.outputs.outputs-json }}
+
+#outputs:
+#  VPCId:
+#    value: ${{ steps.get_outputs.outputs.VPCId }}
+#    description: VPD ID
+#  PublicSubnetId1:
+#    value: ${{ steps.get_outputs.outputs.PublicSubnetId1 }}
+#    description: Public Subnet ID
+#  PublicSubnetId2:
+#    value: ${{ steps.get_outputs.outputs.PublicSubnetId2 }}
+#    description: Public Subnet ID
+#  PrivateSubnetId1:
+#    value: ${{ steps.get_outputs.outputs.PrivateSubnetId1 }}
+#    description: Private Subnet ID
+#  PrivateSubnetId2:
+#    value: ${{ steps.get_outputs.outputs.PrivateSubnetId2 }}
+#    description: Private Subnet ID
+#  PrivateSubnetId3:
+#    value: ${{ steps.get_outputs.outputs.PrivateSubnetId3 }}
+#    description: Private Subnet ID
+#  SecurityGroupEcsId:
+#    value: ${{ steps.get_outputs.outputs.SecurityGroupEcsId }}
+#    description: Security Group for ECS
+#  SecurityGroupAlbId:
+#    value: ${{ steps.get_outputs.outputs.SecurityGroupAlbId }}
+#    description: Security Group for ALB
+#  AppLoadBalancerDnsName:
+#    value: ${{ steps.get_outputs.outputs.AppLoadBalancerDnsName }}
+#    description: Application Load Balancer DNS Name
+#  AppLoadBalancerTargetGroupId:
+#    value: ${{ steps.get_outputs.outputs.AppLoadBalancerTargetGroupId }}
+#    description: Application Load Balancer Target Group
+#  ApiGatewayId:
+#    value: ${{ steps.get_outputs.outputs.ApiGatewayId }}
+#    description: API Gateway ID
+#  ApiGatewayDomainName:
+#    value: ${{ steps.get_outputs.outputs.ApiGatewayDomainName }}
+#    description: API Gateway Domain Name
+#  S3RegionalDomainName:
+#    value: ${{ steps.get_outputs.outputs.S3RegionalDomainName }}
+#    description: S3 Regional Domain Name
+#  S3Arn:
+#    value: ${{ steps.get_outputs.outputs.S3Arn }}
+#    description: S3 ARN
+#  S3BucketId:
+#    value: ${{ steps.get_outputs.outputs.S3BucketId }}
+#    description: S3 Bucket ID
+#  CloudFrontURL:
+#    value: ${{ steps.get_outputs.outputs.CloudFrontURL }}
+#    description: CloudFront URL
+#  CloudFrontId:
+#    value: ${{ steps.get_outputs.outputs.CloudFrontId }}
+#    description: CloudFront ID
+#  image_uri:
+#    value: ${{ steps.get_outputs.outputs.image_uri }}
+#    description: Docker Image URI
+#  LogGroupId:
+#    value: ${{ steps.get_outputs.outputs.LogGroupId }}
+#    description: ECS Log Group ID
+#  EcsRoleArn:
+#    value: ${{ steps.get_outputs.outputs.EcsRoleArn }}
+#    description: ECS IAM Role ARN
+#  ECSClusterId:
+#    value: ${{ steps.get_outputs.outputs.ECSClusterId }}
+#    description: ECS Cluster ID
+#  TaskDefinitionId:
+#    value: ${{ steps.get_outputs.outputs.TaskDefinitionId }}
+#    description: ECS Task Definition ID
+
+#  EcrRepositoryName:
+#    value: ${{ steps.get_outputs.outputs.EcrRepositoryName }}
+#    description: ECR Repository name
 
 #  outputs-json:
 #    description: JSON of outputs

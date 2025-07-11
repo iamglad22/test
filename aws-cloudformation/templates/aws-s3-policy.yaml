@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: IFM CloudFormation - S3
+Description: CloudFormation - S3
 Parameters:
 #  InfraCode:
 #    Type: String

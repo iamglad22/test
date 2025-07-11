@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: IFM CloudFormation - ECS IAM Role
+Description: CloudFormation - ECS IAM Role
 Parameters:
   InfraCode:
     Type: String

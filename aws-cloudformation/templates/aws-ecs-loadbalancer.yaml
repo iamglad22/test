@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: IFM CloudFormation - Load Balancer
+Description: CloudFormation - Load Balancer
 Parameters:
   InfraCode:
     Type: String

@@ -10,9 +10,11 @@ on:
         required: true
         type: string
     secrets:
-      aws-access-key-id:
+      AWS_ACCESS_KEY_ID:
         required: true
-      aws-secret-access-key:
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+      AWS_ACCOUNT_ID:
         required: true
 
     outputs:
@@ -104,8 +106,8 @@ jobs:
       - name: Configure AWS Credentials
         uses: ./.github/actions/aws-config
         with:
-          aws-access-key-id: ${{ secrets.aws-access-key-id }}
-          aws-secret-access-key: ${{ secrets.aws-secret-access-key }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ inputs.aws-region }}
       - name: Deploy CloudFormation Stack - Networking
         id: network
@@ -126,8 +128,8 @@ jobs:
       - name: Configure AWS Credentials
         uses: ./.github/actions/aws-config
         with:
-          aws-access-key-id: ${{ secrets.aws-access-key-id }}
-          aws-secret-access-key: ${{ secrets.aws-secret-access-key }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ inputs.aws-region }}
       - name: Deploy CloudFormation Stack - Networking IGW
         id: network
@@ -151,8 +153,8 @@ jobs:
       - name: Configure AWS Credentials
         uses: ./.github/actions/aws-config
         with:
-          aws-access-key-id: ${{ secrets.aws-access-key-id }}
-          aws-secret-access-key: ${{ secrets.aws-secret-access-key }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ inputs.aws-region }}
       - name: Deploy CloudFormation Stack - Networking NAT
         id: network
@@ -181,8 +183,8 @@ jobs:
       - name: Configure AWS Credentials
         uses: ./.github/actions/aws-config
         with:
-          aws-access-key-id: ${{ secrets.aws-access-key-id }}
-          aws-secret-access-key: ${{ secrets.aws-secret-access-key }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ inputs.aws-region }}      
       - name: Deploy CloudFormation Stack - Security Group
         id: security_group
@@ -211,8 +213,8 @@ jobs:
       - name: Configure AWS Credentials
         uses: ./.github/actions/aws-config
         with:
-          aws-access-key-id: ${{ secrets.aws-access-key-id }}
-          aws-secret-access-key: ${{ secrets.aws-secret-access-key }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ inputs.aws-region }}
       - name: Deploy CloudFormation Stack - Application Load Balancer
         id: alb
@@ -243,8 +245,8 @@ jobs:
       - name: Configure AWS Credentials
         uses: ./.github/actions/aws-config
         with:
-          aws-access-key-id: ${{ secrets.aws-access-key-id }}
-          aws-secret-access-key: ${{ secrets.aws-secret-access-key }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ inputs.aws-region }}
       - name: Deploy CloudFormation Stack - API Gateway
         id: api_gateway
@@ -275,8 +277,8 @@ jobs:
         #uses: aws-actions/configure-aws-credentials@v2
         uses: ./.github/actions/aws-config
         with:
-          aws-access-key-id: ${{ secrets.aws-access-key-id }}
-          aws-secret-access-key: ${{ secrets.aws-secret-access-key }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ inputs.aws-region }}
       - name: Deploy CloudFormation Stack - S3 Bucket
         id: storage
@@ -300,8 +302,8 @@ jobs:
       - name: Configure AWS Credentials
         uses: ./.github/actions/aws-config
         with:
-          aws-access-key-id: ${{ secrets.aws-access-key-id }}
-          aws-secret-access-key: ${{ secrets.aws-secret-access-key }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ inputs.aws-region }}
       - name: Deploy CloudFormation Stack - Cloudfront
         id: cloudfront
@@ -326,8 +328,8 @@ jobs:
       - name: Configure AWS Credentials
         uses: ./.github/actions/aws-config
         with:
-          aws-access-key-id: ${{ secrets.aws-access-key-id }}
-          aws-secret-access-key: ${{ secrets.aws-secret-access-key }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ inputs.aws-region }}
       - name: Deploy CloudFormation Stack - S3 Bucket Policy
         id: s3-policy
@@ -355,8 +357,8 @@ jobs:
       - name: Configure AWS Credentials
         uses: ./.github/actions/aws-config
         with:
-          aws-access-key-id: ${{ secrets.aws-access-key-id }}
-          aws-secret-access-key: ${{ secrets.aws-secret-access-key }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ inputs.aws-region }}
 
       - name: Deploy CloudFormation Stack - ECR
@@ -387,8 +389,8 @@ jobs:
       - name: Configure AWS Credentials
         uses: ./.github/actions/aws-config
         with:
-          aws-access-key-id: ${{ secrets.aws-access-key-id }}
-          aws-secret-access-key: ${{ secrets.aws-secret-access-key }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ inputs.aws-region }}
           
       - name: Login to Amazon ECR
@@ -438,8 +440,8 @@ jobs:
       - name: Configure AWS Credentials
         uses: ./.github/actions/aws-config
         with:
-          aws-access-key-id: ${{ secrets.aws-access-key-id }}
-          aws-secret-access-key: ${{ secrets.aws-secret-access-key }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ inputs.aws-region }}
       - name: Deploy CloudFormation Stack - ECS Log Group
         env:
@@ -481,65 +483,65 @@ jobs:
 
 
           
-  deploy_ecs_td:
-    runs-on: ubuntu-latest
-    needs: [deploy_ecr, deploy_ecr_docker_image, deploy_ecs-req, deploy_alb, deploy_network, deploy_sg]
-    outputs:
-      TaskDefinitionId: ${{ steps.ecs-taskdefinition.outputs.TaskDefinitionId }}
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-      - name: Configure AWS Credentials
-        uses: ./.github/actions/aws-config
-        with:
-          aws-access-key-id: ${{ secrets.aws-access-key-id }}
-          aws-secret-access-key: ${{ secrets.aws-secret-access-key }}
-          aws-region: ${{ inputs.aws-region }}            
-      - name: Deploy CloudFormation Stack - ECS Task Definition
-        id: ecs-taskdefinition
-        env:
-          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-          AWS_REGION: ${{ env.AWS_REGION }}
-          EcrRepositoryName: ${{ needs.deploy_ecr.outputs.EcrRepositoryName }}
-        uses: ./.github/actions/deploy-cf-stack
-        with:
-          stack-name: ${{ env.ENV_NAME }}-ecs-taskdefinition
-          template-file: ${{ env.ECS_TD_TEMPLATE }}
-          params-file: ${{ env.PARAMS_FILE }}
-          extra-params: |
-            LogGroupId=${{ needs.deploy_ecs-req.outputs.LogGroupId }}
-            EcsRoleArn=${{ needs.deploy_ecs-req.outputs.EcsRoleArn }}
-            ContainerImage=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${EcrRepositoryName}:latest
-          output-keys: TaskDefinitionId
+#  deploy_ecs_td:
+#    runs-on: ubuntu-latest
+#    needs: [deploy_ecr, deploy_ecr_docker_image, deploy_ecs-req, deploy_alb, deploy_network, deploy_sg]
+#    outputs:
+#      TaskDefinitionId: ${{ steps.ecs-taskdefinition.outputs.TaskDefinitionId }}
+#    steps:
+#      - name: Checkout Code
+#        uses: actions/checkout@v3
+#      - name: Configure AWS Credentials
+#        uses: ./.github/actions/aws-config
+#        with:
+#          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#          aws-region: ${{ inputs.aws-region }}            
+#      - name: Deploy CloudFormation Stack - ECS Task Definition
+#        id: ecs-taskdefinition
+#        env:
+#          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+#          AWS_REGION: ${{ env.AWS_REGION }}
+#          EcrRepositoryName: ${{ needs.deploy_ecr.outputs.EcrRepositoryName }}
+#        uses: ./.github/actions/deploy-cf-stack
+#        with:
+#          stack-name: ${{ env.ENV_NAME }}-ecs-taskdefinition
+#          template-file: ${{ env.ECS_TD_TEMPLATE }}
+#          params-file: ${{ env.PARAMS_FILE }}
+#          extra-params: |
+#            LogGroupId=${{ needs.deploy_ecs-req.outputs.LogGroupId }}
+#            EcsRoleArn=${{ needs.deploy_ecs-req.outputs.EcsRoleArn }}
+#            ContainerImage=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${EcrRepositoryName}:latest
+#          output-keys: TaskDefinitionId
 
 
-  deploy_ecs-service:
-    runs-on: ubuntu-latest
-    needs: [deploy_ecr, deploy_ecs-req, deploy_alb, deploy_network, deploy_sg, deploy_ecs_td]
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-      - name: Configure AWS Credentials
-        uses: ./.github/actions/aws-config
-        with:
-          aws-access-key-id: ${{ secrets.aws-access-key-id }}
-          aws-secret-access-key: ${{ secrets.aws-secret-access-key }}
-          aws-region: ${{ inputs.aws-region }}
-      - name: Output TD ID
-        run: echo "${{ needs.deploy_ecs_td.outputs.TaskDefinitionId }}"
-      - name: Deploy CloudFormation Stack - ECS Service
-        id: ecs-service
-        env:
-          TaskDef_Id: ${{ needs.deploy_ecs_td.outputs.TaskDefinitionId }}
-        uses: ./.github/actions/deploy-cf-stack
-        with:
-          stack-name: ${{ env.ENV_NAME }}-ecs-service
-          template-file: ${{ env.ECS_SERVICE_TEMPLATE }}
-          params-file: ${{ env.PARAMS_FILE }}
-          extra-params: |
-            TaskDefinitionId=${TaskDef_Id}
-            ECSClusterId=${{ needs.deploy_ecs-req.outputs.ECSClusterId }}
-            AppLoadBalancerTargetGroupId=${{ needs.deploy_alb.outputs.AppLoadBalancerTargetGroupId }}
-            PrivateSubnetId1=${{ needs.deploy_network.outputs.PrivateSubnetId1 }}
-            PrivateSubnetId2=${{ needs.deploy_network.outputs.PrivateSubnetId2 }}
-            SecurityGroupEcsId=${{ needs.deploy_sg.outputs.SecurityGroupEcsId }}
+#  deploy_ecs-service:
+#    runs-on: ubuntu-latest
+#    needs: [deploy_ecr, deploy_ecs-req, deploy_alb, deploy_network, deploy_sg, deploy_ecs_td]
+#    steps:
+#      - name: Checkout Code
+#        uses: actions/checkout@v3
+#      - name: Configure AWS Credentials
+#        uses: ./.github/actions/aws-config
+#        with:
+#          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#          aws-region: ${{ inputs.aws-region }}
+#      - name: Output TD ID
+#        run: echo "${{ needs.deploy_ecs_td.outputs.TaskDefinitionId }}"
+#      - name: Deploy CloudFormation Stack - ECS Service
+#        id: ecs-service
+#        env:
+#          TaskDef_Id: ${{ needs.deploy_ecs_td.outputs.TaskDefinitionId }}
+#        uses: ./.github/actions/deploy-cf-stack
+#        with:
+#          stack-name: ${{ env.ENV_NAME }}-ecs-service
+#          template-file: ${{ env.ECS_SERVICE_TEMPLATE }}
+#          params-file: ${{ env.PARAMS_FILE }}
+#          extra-params: |
+#            TaskDefinitionId=${TaskDef_Id}
+#            ECSClusterId=${{ needs.deploy_ecs-req.outputs.ECSClusterId }}
+#            AppLoadBalancerTargetGroupId=${{ needs.deploy_alb.outputs.AppLoadBalancerTargetGroupId }}
+#            PrivateSubnetId1=${{ needs.deploy_network.outputs.PrivateSubnetId1 }}
+#            PrivateSubnetId2=${{ needs.deploy_network.outputs.PrivateSubnetId2 }}
+#            SecurityGroupEcsId=${{ needs.deploy_sg.outputs.SecurityGroupEcsId }}
